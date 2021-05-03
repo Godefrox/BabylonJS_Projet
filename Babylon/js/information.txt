@@ -1,0 +1,13 @@
+
+
+Faire un éditeur, représenté les objets personnalisés par des objets simple
+
+Permettre d'indiquer les zones au sein du simulateur
+
+Les donnés sont précalculés
+
+Faire un jeu de couleur en fonction du FMI
+
+Drag & Drop ( Pouvoir modifier le Y sous certaines conditions)
+
+Cell shading

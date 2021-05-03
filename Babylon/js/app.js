@@ -1,29 +1,22 @@
-/*
- var canvas = document.getElementById("renderCanvas");
+/*var canvas = document.getElementById("renderCanvas");
 
-        var engine = null;
-        var scene = null;
-        var sceneToRender = null;
-        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
-        var createScene = function () {
+var engine = null;
+var scene = null;
+var sceneToRender = null;
+var camera;
+var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+
+var createScene = function () {
     // This creates a basic Babylon Scene object (non-mesh)
     var scene = new BABYLON.Scene(engine);
 
-    
-    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    BABYLON.SceneLoader.Append("", "js/Wait.babylon", scene, function (scene) {
+        // do something with the scene
+    });
 
-    // Default intensity is 1. Let's dim the light a small amount
-    light.intensity = 0.7;
+    // This creates and positions a free camera (non-mesh)
+    camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(76, 120, 9), scene);
 
-    // Our built-in 'sphere' shape.
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
- 
-    // Move the sphere upward 1/2 its height
-    sphere.position.y = 1;
-
-	// This creates and positions a free camera (non-mesh)
-    var camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene,sphere);
 
     // This targets the camera to scene origin
     camera.setTarget(BABYLON.Vector3.Zero());
@@ -31,102 +24,181 @@
     // This attaches the camera to the canvas
     camera.attachControl(canvas, true);
 
-    // Our built-in 'ground' shape.
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+    camera.cameraRotation = new BABYLON.Vector2(1.57,-0.15);
+    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+    // Default intensity is 1. Let's dim the light a small amount
+    light.intensity = 0.7;
+
+    // Our built-in 'sphere' shape.
 
     return scene;
 };
-                var engine;
-                var scene;
-                initFunction = async function() {               
-                    var asyncEngineCreation = async function() {
-                        try {
-                        return createDefaultEngine();
-                        } catch(e) {
-                        console.log("the available createEngine function failed. Creating the default engine instead");
-                        return createDefaultEngine();
-                        }
-                    }
+var engine;
+var scene;
+var coordMouse
+var vector = { x:'', y:'', z:'' };
+initFunction = async function() {
 
-                    engine = await asyncEngineCreation();
-        if (!engine) throw 'engine should not be null.';
-        scene = createScene();};
-        initFunction().then(() => {sceneToRender = scene        
-            engine.runRenderLoop(function () {
-                if (sceneToRender && sceneToRender.activeCamera) {
-                    sceneToRender.render();
-                }
-            });
-        });
+    var asyncEngineCreation = async function() {
+        try {
+            return createDefaultEngine();
+        } catch(e) {
+            console.log("the available createEngine function failed. Creating the default engine instead");
+            return createDefaultEngine();
+        }
+    }
 
-        // Resize
-        window.addEventListener("resize", function () {
-            engine.resize();
-        });
+    engine = await asyncEngineCreation();
+    if (!engine) throw 'engine should not be null.';
+    scene = createScene();};
+initFunction().then(() => {sceneToRender = scene
+    engine.runRenderLoop(function () {
+        if (sceneToRender && sceneToRender.activeCamera) {
+            sceneToRender.render()
+             coordMouse = function (){
 
-*/
-/*
-var canvas = document.getElementById("renderCanvas");
-      var engine = new BABYLON.Engine(canvas, true);
-      // here the doc for Load function: //doc.babylonjs.com/typedoc/classes/babylon.sceneloader#load
-      BABYLON.SceneLoader.Load("", "PieceTestblend.babylon", engine, function (scene) {
-        //as this .babylon example hasn't camera in it, we have to create one
-        var camera = new BABYLON.ArcRotateCamera("Camera", 1, 1, 4, BABYLON.Vector3.Zero(), scene);
-        scene.executeWhenReady(function(){
-            engine.runRenderLoop(function () {
-                scene.render();
-            });
-        })
+                 scene.onPointerDown = function (event, pickResult){
 
+                     vector = pickResult.pickedPoint;
+                     console.log(vector);
+                     addVertex();
+                 }
+             };
+            coordMouse();
+            /*
+            console.log(camera.rotation);
+            console.log(scene.pointerX);
+            console.log(scene.pointerY);
+        }
+    });
+});
 
+function addVertex(){
+   let box = BABYLON.MeshBuilder.CreateBox("box",{height: 5}, scene);
+   box.position = vector;
+   box.position.y = 5
+}
 
-      });
+function moveVertex(){
+//Trouve si un point est présent, puis le maintiens jusqu'au nouvelle emplacement en le déplacent
+}
 
+function removeVertex(){
+//Supprime le vertex qui est présent au niveau des coordonés
+}
+
+// Resize
 window.addEventListener("resize", function () {
     engine.resize();
 });
+
+
+
 */
 
-var createScene = function () {
+var canvas = document.getElementById("renderCanvas");
 
-    var canvas = document.getElementById("renderCanvas");
-    var engine = new BABYLON.Engine(canvas, true);
-    // This creates a basic Babylon Scene object (non-mesh)
+var engine = null;
+var scene = null;
+var sceneToRender = null;
+var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+var vector = { x:'', y:'', z:'' };
+const myLines = [
+
+];
+const areaName = 1;
+
+//Create linesystem
+var linesystem;
+var createScene = function() {
     var scene = new BABYLON.Scene(engine);
+    BABYLON.SceneLoader.Append("", "js/Wait.babylon", scene, function (scene) {
+        // do something with the scene
+    });
 
-    // This creates and positions a free camera (non-mesh)
-    var camera = new BABYLON.ArcRotateCamera("arcR", -Math.PI/2, Math.PI/2, 15, BABYLON.Vector3.Zero(), scene);
-
+    // Camera
+    camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(76, 120, 9), scene);
     // This attaches the camera to the canvas
     camera.attachControl(canvas, true);
+    camera.cameraRotation = new BABYLON.Vector2(1.57,-0.15);
+    //camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+    var canvas = document.getElementById("renderCanvas");
+    let ratio = canvas.width / canvas.height ;
+    let zoom = 20;
+    let width = zoom * ratio;
+    //camera.orthoTop = zoom;
+    //camera.orthoLeft = -width;
+    //camera.orthoRight = width;
+    //camera.orthoBottom = -zoom;
 
-    var planeOpts = {
-        height: 5.4762,
-        width: 7.3967,
-        sideOrientation: BABYLON.Mesh.DOUBLESIDE
-    };
-    var ANote0Video = BABYLON.MeshBuilder.CreatePlane("plane", planeOpts, scene);
-    var vidPos = (new BABYLON.Vector3(0,0,0.1))
-    ANote0Video.position = vidPos;
-    var ANote0VideoMat = new BABYLON.StandardMaterial("m", scene);
-    var ANote0VideoVidTex = new BABYLON.VideoTexture("vidtex","test.mjpeg", scene);
-    ANote0VideoMat.diffuseTexture = ANote0VideoVidTex;
-    ANote0VideoMat.roughness = 1;
-    ANote0VideoMat.emissiveColor = new BABYLON.Color3.White();
-    ANote0Video.material = ANote0VideoMat;
-    scene.onPointerObservable.add(function(evt){
-        if(evt.pickInfo.pickedMesh === ANote0Video){
-            //console.log("picked");
-            if(ANote0VideoVidTex.video.paused)
-                ANote0VideoVidTex.video.play();
-            else
-                ANote0VideoVidTex.video.pause();
-            console.log(ANote0VideoVidTex.video.paused?"paused":"playing");
-        }
-    }, BABYLON.PointerEventTypes.POINTERPICK);
-    //console.log(ANote0Video);
+    var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(5, 10, 0), scene);
+
+
+
+
+
     return scene;
 
-};
+}
+var engine;
+var scene;
+initFunction = async function() {
+    var asyncEngineCreation = async function() {
+        try {
+            return createDefaultEngine();
+        } catch(e) {
+            console.log("the available createEngine function failed. Creating the default engine instead");
+            return createDefaultEngine();
+        }
+    }
 
-createScene();
+    engine = await asyncEngineCreation();
+    if (!engine) throw 'engine should not be null.';
+    scene = createScene();};
+initFunction().then(() => {sceneToRender = scene
+    engine.runRenderLoop(function () {
+        if (sceneToRender && sceneToRender.activeCamera) {
+            sceneToRender.render();
+            var coordMouse = function (){
+
+                scene.onPointerDown = function (event, pickResult){
+
+                    vector = pickResult.pickedPoint;
+                    console.log(vector);
+                    addVertex();
+                }
+            };
+            coordMouse();
+        }
+    });
+});
+var i = 0;
+var firstTime = true;
+function addVertex(){
+    var area = myLines[areaName];
+    console.log(area);
+    console.log(myLines[1]);
+    var areaB;
+    if(areaB === undefined){
+        area = [];
+        areaB = true;
+    }
+    area.push(new BABYLON.Vector3(vector.x, 5, vector.z));
+    if(areaB === true){
+        myLines.splice(areaName,0,area);
+    }else{
+        myLines[areaName] = area;
+    }
+    linesystem = BABYLON.MeshBuilder.CreateLineSystem("linesystem", {lines: myLines});
+    linesystem.color = new BABYLON.Color3(1, 1, 1);
+
+    console.log(myLines);
+
+
+}
+// Resize
+window.addEventListener("resize", function () {
+    engine.resize();
+});
