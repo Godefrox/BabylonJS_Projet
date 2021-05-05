@@ -227,12 +227,16 @@ var line2D = function(name, options, scene) {
  */
 
 function vertexMod(button){
-    //Camera on 2D projection in 3D environement
-    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
     //Remove Control Camera
     camera.detachControl();
-    //Set rotation of camera
-    camera.cameraRotation = new BABYLON.Vector2(1.57,-0.15);
+    //Camera on 2D projection in 3D environement
+    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+    //Set position of camera
+    camera.position = new BABYLON.Vector3(76, 120, 9);
+    //Set rotation to 0
+    camera.rotation = new BABYLON.Vector3(0,0,0);
+    //Set rotation to x = 180 necessary if you want to bypass the black screen
+    camera.cameraRotation = new BABYLON.Vector3(180,0,0);
     //Specification necessary for 2D visualisation on 3D environement
     resizeCamera2D();
     //Allow to specify in textInput the currently name of area you want to modify
@@ -481,9 +485,10 @@ function setTextAreaWithInterface(interface,messageDefault,x,y){
 var createScene = function(name){
     var scene = new BABYLON.Scene(engine);
     BABYLON.SceneLoader.Append("", name, scene, function (scene) {
-        let a = scene.getNodeByName("STANDARD_curve_002");
-        let b = a.subMeshes;
-        b.forEach(e => {e.getMaterial().backFaceCulling = false;});
+        let materials = scene.materials;
+        if(materials !== undefined){
+         materials.forEach(material => {material.backFaceCulling = false;});
+        }
     });
     // Camera
     camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(76, 120, 9), scene);
