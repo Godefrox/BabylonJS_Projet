@@ -226,6 +226,60 @@ var line2D = function(name, options, scene) {
  * vertexMod allow to add, supress, modify vertex of area in 3D environement with mouse button (left, middle, right)
  */
 
+function colorHexaToRGB(hexa){
+    console.log("LE CHANGEMENT C'EAAAST MAINTENANT");
+    var tab = [
+        0,
+        0,
+        0
+    ];
+    if(hexa !== undefined){
+        console.log("LE CHANGXXXEMENT C'EST MAINTENANT");
+        if(typeof hexa === "string"){
+            console.log("LE CHANGEMCCCCENT C'EST MAINTENANT");
+            length = hexa.length;
+            let decal = 0;
+            if(length>=6 && length <= 7){
+                if(length === 7){
+                    decal = 1;
+                }
+                tab[0] = (parseInt((hexa[0+decal]+hexa[1+decal]),16))/255;
+                tab[1] = (parseInt((hexa[2+decal]+hexa[3+decal]),16))/255;
+                tab[2] = (parseInt((hexa[4+decal]+hexa[5+decal]),16))/255;
+            }
+
+        }
+
+    }
+    return tab;
+}
+
+function colorRGBToHexa(RGB){
+   var hexa = "#";
+    if(RGB !== undefined){
+            length = RGB.length;
+            if(length===3){
+                hexa += Math.round((RGB[0]*255)).toString(16);
+                hexa += Math.round((RGB[1]*255)).toString(16);
+                hexa += Math.round((RGB[2]*255)).toString(16);
+            }
+
+
+
+    }
+    return hexa;
+}
+
+function setColor(textInput){
+    scene.onPointerDown = function (event, pickResult) {
+        var gl = canvas.getContext('webgl2');
+        var pixels = new Uint8Array(4);
+        gl.readPixels(scene.pointerX, scene.pointerY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        console.log(pixels); // Uint8Array
+    }
+}
+
+
 function vertexMod(button){
     //Remove Control Camera
     camera.detachControl();
@@ -240,16 +294,40 @@ function vertexMod(button){
     //Specification necessary for 2D visualisation on 3D environement
     resizeCamera2D();
     //Allow to specify in textInput the currently name of area you want to modify
-    let textInput = setTextAreaWithInterface(button,"1",0,10);
-    textInput.onTextChangedObservable.add(function(event) {
-        areaName = textInput.text;
+    let textInputArea = setTextAreaWithInterface(button,"1",0,10);
+    textInputArea.onTextChangedObservable.add(function(event) {
+        areaName = textInputArea.text;
     });
     //Set areaName in global variable
-    areaName = 1;
+    areaName = textInputArea.text;
     //List of boutons to choose the action you want.
-    let buttonAdd = setButtonWithInterface(textInput,"button_add","add",0,10,function(){addVertex()});
+    let buttonAdd = setButtonWithInterface(textInputArea,"button_add","add",0,10,function(){addVertex()});
     let buttonRemove = setButtonWithInterface(buttonAdd,"button_remove","remove",0,10,function() {removeVertex();});
     let buttonModify = setButtonWithInterface(buttonRemove,"button_modify","modify",0,10,function() {modifyVertex();});
+   /*
+    let textInputRGB = setTextAreaWithInterface(buttonModify,"#FFFFFF",0,10);
+    textInputRGB.onTextChangedObservable.add(function(event) {
+        let value = colorHexaToRGB(textInputRGB.text);
+        console.log(value);
+        pickerRGB.value = new BABYLON.Color3(value.r,value.g,value.b);
+        pickerRGB.onValueChangedObservable;
+        console.log("LE CHANGEMENT C'EST MAINTENANT");
+    });*/
+    let pickerRGB = setPickerWithInterface(buttonModify,0,10,function(value) { // value is a color3
+        let area = mapArea.get(areaName);
+        if(area !== undefined){
+            area.color = new BABYLON.Color3(value.r,value.g,value.b);
+            refreshArea(area);
+            mapArea.set(areaName,area);
+            console.log("nom array" + areaName);
+            console.log("map array" + mapArea);
+            console.log("area " + area);
+        }
+    });
+
+
+
+
 }
 
 /**
@@ -445,13 +523,13 @@ function setButtonWithInterface(interface,nom,message,x,y,action){
     button2.width = interface.width;
     button2.height = interface.height;
     if(y !== 0 ){
-        button2.top = interface.topInPixels + button2.heightInPixels + y;
+        button2.top = interface.topInPixels + interface.heightInPixels/2 + button2.heightInPixels/2 + y;
     }else{
         button2.top = interface.topInPixels;
     }
 
     if(x !== 0 ){
-        button2.left = interface.leftInPixels + button2.widthInPixels + x;
+        button2.left = interface.leftInPixels + interface.widthInPixels/2 + button2.widthInPixels/2 + x;
     }else{
         button2.left = interface.leftInPixels;
     }
@@ -461,7 +539,6 @@ function setButtonWithInterface(interface,nom,message,x,y,action){
     button2.background = interface.background;
     button2.onPointerUpObservable.add(action);
     advancedTexture.addControl(button2);
-
     return button2;
 }
 
@@ -475,13 +552,13 @@ function setTextAreaWithInterface(interface,messageDefault,x,y){
     textInput.height = "40px";
 
     if(y !== 0 ){
-        textInput.top = interface.topInPixels + textInput.heightInPixels + y;
+        textInput.top = interface.topInPixels + interface.heightInPixels/2 + textInput.heightInPixels/2 + y;
     }else{
         textInput.top = interface.topInPixels;
     }
 
     if(x !== 0 ){
-        textInput.left = interface.leftInPixels + textInput.widthInPixels + x;
+        textInput.left = interface.leftInPixels + interface.widthInPixels/2 + textInput.widthInPixels/2 + x;
     }else{
         textInput.left = interface.leftInPixels;
     }
@@ -492,6 +569,38 @@ function setTextAreaWithInterface(interface,messageDefault,x,y){
     advancedTexture.addControl(textInput);
 
     return textInput;
+}
+
+function setPickerWithInterface(interface,x,y,action){
+    let picker = new BABYLON.GUI.ColorPicker();
+    let area = mapArea.get(areaName);
+    if(area !== undefined){
+        picker.value = area.color;
+    }else{
+        picker.value = new BABYLON.Color3(0,0,0);
+    }
+    picker.height = "100px";
+    picker.width = "100px";
+    picker.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+    if(y !== 0 ){
+        picker.top = interface.topInPixels + interface.heightInPixels/2 + picker.heightInPixels/2 + y ;
+    }else{
+        picker.top = interface.topInPixels;
+    }
+
+    if(x !== 0 ){
+        picker.left = interface.leftInPixels + picture.widthInPixels/2 + picker.widthInPixels/2 + x;
+    }else{
+        picker.left = interface.leftInPixels;
+    }
+    picker.color = "white";
+    picker.background = "green";
+
+    picker.onValueChangedObservable.add(action);
+
+    advancedTexture.addControl(picker);
+    return picker;
 }
 
 /**
