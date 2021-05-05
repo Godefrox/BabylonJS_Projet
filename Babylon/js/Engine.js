@@ -243,14 +243,13 @@ function vertexMod(button){
     let textInput = setTextAreaWithInterface(button,"1",0,10);
     textInput.onTextChangedObservable.add(function(event) {
         areaName = textInput.text;
-        console.log(areaName);
     });
     //Set areaName in global variable
     areaName = 1;
     //List of boutons to choose the action you want.
-    let buttonAdd = setButtonWithInterface(textInput,"button_add","add",0,10,function(){console.log("Add ");addVertex()});
-    let buttonRemove = setButtonWithInterface(buttonAdd,"button_remove","remove",0,10,function() {console.log("Remove ");removeVertex();});
-    let buttonModify = setButtonWithInterface(buttonRemove,"button_modify","modify",0,10,function() {console.log("Modify ");modifyVertex();});
+    let buttonAdd = setButtonWithInterface(textInput,"button_add","add",0,10,function(){addVertex()});
+    let buttonRemove = setButtonWithInterface(buttonAdd,"button_remove","remove",0,10,function() {removeVertex();});
+    let buttonModify = setButtonWithInterface(buttonRemove,"button_modify","modify",0,10,function() {modifyVertex();});
 }
 
 /**
@@ -267,7 +266,6 @@ function vertexMod(button){
  }
  */
 function refreshArea(area){
-    console.log(area);
 
     if(area.line !== undefined){
         area.line.dispose();
@@ -299,6 +297,19 @@ function refreshArea(area){
     }
 }
 
+function closestVortex(vector,path){
+    let similar = path[0];
+    let distance = Math.abs((vector.x - similar.x)) + Math.abs((vector.y - similar.y)) + Math.abs((vector.z - similar.z));
+    path.forEach(e => {
+        let distanceB = Math.abs((vector.x - e.x)) + Math.abs((vector.y - e.y)) + Math.abs((vector.z - e.z));
+
+        if(distance > distanceB){
+            distance = distanceB;
+            similar = e;
+        }
+    });
+    return path.indexOf(similar);
+}
 /**
  <summary> : Allow to add vortex in mouse position in currently area
  */
@@ -332,39 +343,23 @@ function addVertex(){
  */
 function removeVertex(){
     scene.onPointerDown = function (event, pickResult) {
-
         vector = pickResult.pickedPoint;
         vector.y = 5;
-
         let area = mapArea.get(areaName);
         if(area !== undefined){
-
             let path = area.path;
             if(path.length > 0){
-            if(path.length >2){
-            let similar;
-            let distance;
-            similar = path[0];
-            distance = Math.abs((vector.x - similar.x)) + Math.abs((vector.y - similar.y)) + Math.abs((vector.z - similar.z));
-            path.forEach(e => {
-                let distanceB = Math.abs((vector.x - e.x)) + Math.abs((vector.y - e.y)) + Math.abs((vector.z - e.z))
-                console.log(e + " pour une distance de :  " + distanceB + " et " + similar + "pour une distance de " +  distance)
-                if(distance > distanceB){
-                    distance = distanceB;
-                    similar = e;
+                if(path.length >2){
+                    let i = closestVortex(vector,path);
+                    path.splice(i,1);
+                }else {
+                    path = [];
                 }
-            });
-            let i = path.indexOf(similar);
-                path.splice(i,1);
-            }else {
-                path = [];
-            }
-            area.path = path;
-            refreshArea(area);
-            mapArea.set(areaName,area);
+                area.path = path;
+                refreshArea(area);
+                mapArea.set(areaName,area);
             }
         }
-
     }
 }
 
@@ -373,11 +368,33 @@ function removeVertex(){
  */
 function modifyVertex(){
     scene.onPointerDown = function (event, pickResult) {
-
         vector = pickResult.pickedPoint;
         vector.y = 5;
-        console.log("Not yet implemented");
+        let area = mapArea.get(areaName);
+        if(area !== undefined){
+            let path = area.path;
+            if(path.length > 0){
+                if(path.length > 1){
+                    let i = closestVortex(vector,path);
+                    scene.onPointerDown = function(event, pickResult){
+                        scene.onPointerMove = function(event,pickResult){
+                        };
+                        modifyVertex();
+                    }
+                    scene.onPointerMove = function(event,pickResult){
+                        pickResult = scene.pick(scene.pointerX,scene.pointerY);
+                        vector = pickResult.pickedPoint;
+                        vector.y = 5;
+                        path.splice(i,1,vector);
+                        area.path = path;
+                        refreshArea(area);
+                    };
+                }
+                mapArea.set(areaName,area);
+            }
+        }
     }
+
 }
 
 /**
@@ -387,7 +404,6 @@ function modifyVertex(){
  */
 function zoomF(event) {
     event.preventDefault();
-    console.log("COUCOU " + zoom);
     zoom += event.deltaY * +0.01;
     // Restrict scale
     zoom = Math.min(Math.max(minZoom, zoom), maxZoom);
