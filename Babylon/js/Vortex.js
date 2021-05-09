@@ -43,7 +43,7 @@ class Vortex {
             let path = area.path;
             if(path.length > 0){
                 if(path.length >2){
-                    let i = this.vortex.closestVortex(path);
+                    let i = this.engine.edition.vortex.closestVortex(path);
                     path.splice(i,1);
                 }else {
                     path = [];
@@ -79,7 +79,7 @@ class Vortex {
         let area = this.engine.mapArea.get(this.engine.areaName);
         if(area != undefined) {
             let path = area.path;
-            let i = this.vortex.closestVortex(path);
+            let i = this.engine.edition.vortex.closestVortex(path);
             this.engine.vector.y = 5;
             path.splice(i, 1, this.engine.vector);
             area.path = path;
