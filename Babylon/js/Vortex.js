@@ -64,7 +64,6 @@ class Vortex {
             let path = area.path;
             if(path.length > 0){
                 if(path.length > 1){
-                    console.log("CONNARD2");
                     this.engine.edition.selectAction("modify_move");
                 }
             }
@@ -75,7 +74,6 @@ class Vortex {
      * Allow the vortex to follow the mouse, we need to launch them with selector function
      */
     followVertex(){
-        console.log("CONNARD3");
         let area = this.engine.mapArea.get(this.engine.areaName);
         if(area != undefined) {
             let path = area.path;

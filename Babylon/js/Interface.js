@@ -7,6 +7,9 @@ class Interface{
         this.engine = myEngine;
     }
 
+    /**
+     <summary> : Allow to  made new model of button
+     */
     setButton(nom,message,horizontalAlignment,verticalAlignment,x,y,radius,outlineColor,backgroundColor,action){
         let button = BABYLON.GUI.Button.CreateSimpleButton(nom, message);
         button.width = "100px";

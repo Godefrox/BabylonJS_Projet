@@ -1,4 +1,5 @@
 import {Vortex} from "./Vortex";
+import {DragDrop} from "./DragDrop";
 class Edition {
 
     ui = null;
@@ -8,11 +9,13 @@ class Edition {
     functDown = null;
     functMove = null;
     shiftBoolean = false;
+    dragAndDrop = null;
 
     constructor(engine,ui) {
         this.engine = engine;
         this.ui = ui;
         this.vortex = new Vortex(engine);
+        this.dragAndDrop = new DragDrop(engine);
     }
 
     line2D (name, options, scene) {
@@ -191,35 +194,45 @@ class Edition {
 
     }
 
+    /**
+     * editMod allow to add, supress, modify vertex of area in 3D environement with mouse button (left, middle, right) and to drag&Drop
+     */
     editMod(button){
         let littleEngine = this.engine;
-        this.engine.camera.detachControl();
-        //Camera on 2D projection in 3D environement
-        this.engine.camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
-        //Set position of camera
-        this.engine.camera.position = new BABYLON.Vector3(76, 120, 9);
-        //Set rotation to 0
-        this.engine.camera.rotation = new BABYLON.Vector3(0,0,0);
-        //Set rotation to x = 180 necessary if you want to bypass the black screen
-        this.engine.camera.cameraRotation = new BABYLON.Vector3(180,0,0);
+        let drag = this.dragAndDrop;
+        let interfaces = this.interfaces;
+        let me = this;
+        button.onPointerUpObservable.clear();
+        button.onPointerUpObservable.add(function(){
+            interfaces.forEach(e => e.isVisible = false);
+            me.functDown = null;
+            me.functMove = null;
+            littleEngine.setCameraNormal();
+            button.onPointerUpObservable.clear();
+            button.onPointerUpObservable.add(function(){
+                littleEngine.edition.editMod(button);
+            })
+        })
+
+        littleEngine.setCameraEdition();
         //Specification necessary for 2D visualisation on 3D environement
-        this.engine.resizeCamera2D();
+        littleEngine.resizeCamera2D();
+        if(interfaces.length <= 0){
         //Allow to specify in textInput the currently name of area you want to modify
         let textInputArea = this.ui.setTextAreaWithInterface(button,"1",0,10);
         textInputArea.onTextChangedObservable.add(function(event) {
-            this.engine.setAreaName(textInputArea.text);
+            littleEngine.setAreaName(textInputArea.text);
         });
-        this.interfaces.push(textInputArea);
+            interfaces.push(textInputArea);
         //Set areaName in global variable
-        this.engine.setAreaName(textInputArea.text);
+        littleEngine.setAreaName(textInputArea.text);
         //List of boutons
-        let me = this;
         let buttonAdd = this.ui.setButtonWithInterface(textInputArea,"button_add","add",0,10,function(){me.selectAction("add")});
-        this.interfaces.push(buttonAdd);
+            interfaces.push(buttonAdd);
         let buttonRemove = this.ui.setButtonWithInterface(buttonAdd,"button_remove","remove",0,10,function() {me.selectAction("remove");});
-        this.interfaces.push(buttonRemove);
+            interfaces.push(buttonRemove);
         let buttonModify = this.ui.setButtonWithInterface(buttonRemove,"button_modify","modify",0,10,function() {me.selectAction("modify");});
-        this.interfaces.push(buttonModify);
+            interfaces.push(buttonModify);
         //Picker Color to change color of area
         let pickerRGB = this.ui.setPickerWithInterface(buttonModify,0,10,function(value) { // value is a color3
             let area = littleEngine.mapArea.get(littleEngine.getAreaName());
@@ -229,31 +242,34 @@ class Edition {
                 littleEngine.mapArea.set(littleEngine.getAreaName(),area);
             }
         });
-        this.interfaces.push(pickerRGB);
+            interfaces.push(pickerRGB);
         //Bountons to take on Drag & Drop
         let buttonDragDrop = this.ui.setButtonWithInterface(pickerRGB,"button_drag&Drop","drag&Drop",0,10,function() {me.selectAction("drag&Drop")});
         buttonDragDrop.height = buttonModify.height;
         buttonDragDrop.width = buttonModify.width;
+            interfaces.push(buttonDragDrop);
         //Area Text to choose name of acces
         let textInputAcces = this.ui.setTextAreaWithInterface(buttonDragDrop,"acces1",0,10);
         textInputAcces.onTextChangedObservable.add(function(event) {
             littleEngine.setAccesName(textInputAcces.text);
         });
         //Set areaName in global variable
-        this.engine.setAccesName(textInputAcces.text);
+        littleEngine.setAccesName(textInputAcces.text);
+            interfaces.push(textInputAcces);
+        }else{
+            interfaces.forEach(e => e.isVisible = true);
+        }
         //Allow to launch a function if pointer has click
-        this.engine.scene.onPointerDown = function (event, pickResult) {
+        littleEngine.scene.onPointerDown = function (event, pickResult) {
             littleEngine.setVector(pickResult.pickedPoint);
             if(me.functDown != null){
                 me.functDown();
-                console.log("LES CONNARDS");
             }
         }
        
         //Allow to launch a function if pointer move.
-        this.engine.scene.onPointerMove = function(event,pickResult){
+        littleEngine.scene.onPointerMove = function(event,pickResult){
             if(me.functMove != null){
-                console.log("LES CONNARDS MOUVANT");
                 if(!me.shiftBoolean){
                     littleEngine.setVector(littleEngine.scene.pick(littleEngine.scene.pointerX,littleEngine.scene.pointerY).pickedPoint);
                 }
@@ -261,13 +277,21 @@ class Edition {
             }
         }
         //Add a observable to detect the key press, actualy we need to detect shift press
-        this.engine.scene.onKeyboardObservable.add((kbInfo) => {
+        littleEngine.scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
                     if(kbInfo.event.key == "Shift"){
                         if(littleEngine.clone != null){
                             if(!me.shiftBoolean ){
-                                heightEditionMod();
+                                littleEngine.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA
+                                littleEngine.camera.attachControl(littleEngine.canvas, true);
+                                littleEngine.camera.position = new BABYLON.Vector3(littleEngine.clone.position.x, littleEngine.clone.position.y, littleEngine.clone.position.z);
+                                littleEngine.zoom = 40;
+                                littleEngine.resizeCamera2D();
+                                littleEngine.clone.position = littleEngine.vector;
+                                drag.followObject();
+                                littleEngine.camera.position.x -= 10;
+                                littleEngine.camera.position.z -= 10
                             }
                             me.shiftBoolean = true;
                         }
@@ -277,6 +301,8 @@ class Edition {
                     if(kbInfo.event.key == "Shift"){
                         me.shiftBoolean = false;
                         littleEngine.oldPointer = null;
+                        littleEngine.setCameraEdition();
+                        littleEngine.resizeCamera2D();
                     }
                     break;
             }
@@ -284,6 +310,19 @@ class Edition {
     }
 
 
+    /**
+
+     <summary> : Allow to refresh the renderer of one area
+     <param> : area is what you want to modify in visualisation
+     <returns> area was modify at the end of code, so you need to modify him in the map.
+     <example> :
+
+     {
+     {some modify in area}
+     refreshArea(area)
+     mapArea.set(areaName,area);
+     }
+     */
     refreshArea(area){
 
         if(area.line != undefined){
@@ -316,42 +355,45 @@ class Edition {
         }
 }
 
+    /**
+     * allow to synchronize the function you want to launch with pointer and in general case
+     * @param action
+     */
     selectAction(action) {
         let me = this;
         switch (action) {
             case "add" :
-                this.functDown = this.vortex.addVertex;
+                me.functDown = me.vortex.addVertex;
                 break;
             case "remove" :
-                this.functDown = this.vortex.removeVertex;
+                me.functDown = me.vortex.removeVertex;
                 break;
             case "modify" :
-                this.functDown = this.vortex.modifyVertex;
+                me.functDown = me.vortex.modifyVertex;
                 break;
             case "modify_move" :
-                console.log("CONNARD");
                 this.functDown = function () {
                     me.functDown = me.vortex.modifyVertex;
                     me.functMove = null;
-                    console.log("CONNARD4");
                 };
-                this.functMove = this.vortex.followVertex;
+                me.functMove = me.vortex.followVertex;
                 break;
             case "drag&Drop" :
-                dragAndDropScene( this.accesName);
+                me.dragAndDrop.dragAndDropScene( me.engine.getAccesName());
                 break;
             case "followObject" :
-                this.functMove = followObject;
-                let littleEngine = this.engine;
-                this.functDown = function () {
+                me.functMove = me.dragAndDrop.followObject;
+                me.functDown = function () {
                     me.functMove = null;
                     me.functDown = null;
-                    littleEngine.clone = null;
+                    me.engine.clone = null;
                 };
             default :
                 break;
         }
     }
+
+
 
 }
 export {Edition};

@@ -1,5 +1,5 @@
-import {Engine2} from "./Engine2";
-let visualisation = new Engine2();;
+import {Engine} from "./Engine";
+let visualisation = new Engine();;
 
 visualisation.createDefaultEngine = function () {
     return new BABYLON.Engine(visualisation.canvas, true, {
@@ -21,7 +21,12 @@ visualisation.initFunction = async function () {
     visualisation.engine = await asyncEngineCreation();
     if (! visualisation.engine) throw 'engine should not be null.';
     visualisation.scene = visualisation.defaultScene();
-    visualisation.canvas.addEventListener('wheel', visualisation.zoomF);
+    visualisation.canvas.addEventListener('wheel', function (event){
+        visualisation.zoom += event.deltaY * +0.01;
+        // Restrict scale
+        visualisation.zoom = Math.min(Math.max(visualisation.minZoom, visualisation.zoom), visualisation.maxZoom);
+        visualisation.resizeCamera2D();
+    });
 
 };
 visualisation.initFunction().then(() => {visualisation.sceneToRender = visualisation.scene
