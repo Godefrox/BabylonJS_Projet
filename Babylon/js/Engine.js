@@ -2,7 +2,7 @@
 @Author : Godefroy MONTONATI
 @Module : Visualisation 3D
  */
-import {Interface} from "../js/Interface";
+import {Interface} from "./Interface";
 import {Edition} from "./Edition";
 
 class Engine {
@@ -23,7 +23,7 @@ class Engine {
     vector = null;
     oldPointer = null;
     areaName = null;
-    accesName = null;
+    accessName = null;
     clone = null;
     minZoom = 10;
     zoom = 50;
@@ -39,7 +39,7 @@ class Engine {
      * polygon: polygon,
      * color : color}
      */
-    controleAcces = [];
+    controleAccess = [];
     boundingBox = null;
     center = null;
     extendSize = null;
@@ -49,16 +49,20 @@ class Engine {
         return  this.areaName;
     }
 
-    getAccesName() {
-        return  this.accesName;
+    getAccessName() {
+        return  this.accessName;
+    }
+
+    getMapArea(){
+        return  this.mapArea;
     }
 
     setAreaName(newAreaName) {
         this.areaName = newAreaName;
     }
 
-    setAccesName(newAcessName) {
-        this.accesName = newAcessName;
+    setAccessName(newAccessName) {
+        this.accessName = newAccessName;
     }
 
     /**
@@ -131,10 +135,10 @@ class Engine {
         let button = this.ui.setButton("button_area_editor", "area editor", BABYLON.GUI.Control.VERTICALALIGNMENT_TOP, BABYLON.GUI.Control.HORIZONTAlALIGNMENT_LEFT, 10, 10, 20, "white", "green", function () {
             edit.editMod(button);
         });
-        this.controleAcces.push(BABYLON.MeshBuilder.CreateBox("acces1", this.scene));
-        this.controleAcces.push(BABYLON.MeshBuilder.CreateBox("acces2", this.scene));
-        this.controleAcces.push(BABYLON.MeshBuilder.CreateBox("acces3", this.scene));
-        this.controleAcces.forEach(e => {
+        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access1", this.scene));
+        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access2", this.scene));
+        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access3", this.scene));
+        this.controleAccess.forEach(e => {
             e.isVisible = false;
             e.material = new BABYLON.StandardMaterial((e.name + "_material"), this.scene);
             e.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random, Math.random);

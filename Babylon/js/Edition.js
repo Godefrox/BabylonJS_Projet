@@ -219,11 +219,11 @@ class Edition {
         littleEngine.resizeCamera2D();
         if(interfaces.length <= 0){
         //Allow to specify in textInput the currently name of area you want to modify
-        let textInputArea = this.ui.setTextAreaWithInterface(button,"1",0,10);
+        let textInputArea = this.ui.setTextAreaWithInterface(button,"areaNumber","1",0,10);
         textInputArea.onTextChangedObservable.add(function(event) {
             littleEngine.setAreaName(textInputArea.text);
         });
-            interfaces.push(textInputArea);
+        interfaces.push(textInputArea);
         //Set areaName in global variable
         littleEngine.setAreaName(textInputArea.text);
         //List of boutons
@@ -248,17 +248,24 @@ class Edition {
         buttonDragDrop.height = buttonModify.height;
         buttonDragDrop.width = buttonModify.width;
             interfaces.push(buttonDragDrop);
-        //Area Text to choose name of acces
-        let textInputAcces = this.ui.setTextAreaWithInterface(buttonDragDrop,"acces1",0,10);
-        textInputAcces.onTextChangedObservable.add(function(event) {
-            littleEngine.setAccesName(textInputAcces.text);
+        //Area Text to choose name of access
+        let textInputAccess = this.ui.setTextAreaWithInterface(buttonDragDrop,"accesArea","access1",0,10);
+        textInputAccess.onTextChangedObservable.add(function(event) {
+            littleEngine.setAccessName(textInputAccess.text);
         });
         //Set areaName in global variable
-        littleEngine.setAccesName(textInputAcces.text);
-            interfaces.push(textInputAcces);
+        littleEngine.setAccessName(textInputAccess.text);
+            interfaces.push(textInputAccess);
         }else{
-            interfaces.forEach(e => e.isVisible = true);
+            interfaces.forEach(e => {e.isVisible = true;
+               if( e.name == "areaNumber" ){
+                   console.log("ET OH");
+                   this.ui.setArreaButton(e);
+                   console.log("JE SUIS EN VIE");
+               }
+            });
         }
+
         //Allow to launch a function if pointer has click
         littleEngine.scene.onPointerDown = function (event, pickResult) {
             littleEngine.setVector(pickResult.pickedPoint);
@@ -280,7 +287,7 @@ class Edition {
         littleEngine.scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
-                    if(kbInfo.event.key == "Shift"){
+                    if(kbInfo.event.key === "Shift"){
                         if(littleEngine.clone != null){
                             if(!me.shiftBoolean ){
                                 littleEngine.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA
@@ -298,7 +305,7 @@ class Edition {
                     }
                     break;
                 case BABYLON.KeyboardEventTypes.KEYUP:
-                    if(kbInfo.event.key == "Shift"){
+                    if(kbInfo.event.key === "Shift"){
                         me.shiftBoolean = false;
                         littleEngine.oldPointer = null;
                         littleEngine.setCameraEdition();
@@ -324,31 +331,33 @@ class Edition {
      }
      */
     refreshArea(area){
-
         if(area.line != undefined){
             area.line.dispose();
         }
-
         if(area.path.length >= 2){
-
+            //LIGNE
+            if(false){
             area.line = this.line2D("line", {path:  area.path, width:1, closed:true}, this.engine.scene);
             area.line.material = new BABYLON.StandardMaterial("", this.engine.scene);
             area.line.material.alpha = 0.8;
             area.line.material.diffuseColor = BABYLON.Color3.Black();
+            }
 
             if ( area.polygon != undefined) {
                 area.polygon.dispose();
             }
 
             if( area.path.length >= 3) {
-
-                area.polygon = BABYLON.MeshBuilder.CreatePolygon("polygon", {
+                area.polygon = BABYLON.MeshBuilder.ExtrudePolygon("polygon", {
                     shape:  area.path,
+                    depth: 5
                 }, this.engine.scene);
-                area.polygon.position.y = 5
+                area.polygon.position.y = 5.2
                 area.polygon.material = new BABYLON.StandardMaterial("red", this.engine.scene);
-                area.polygon.material.alpha = 0.4;
+                area.polygon.material.alpha = 0.6;
                 area.polygon.material.diffuseColor =  area.color;
+                area.polygon.material.backFaceCulling = false;
+                console.log(area);
 
 
             }
@@ -379,7 +388,7 @@ class Edition {
                 me.functMove = me.vortex.followVertex;
                 break;
             case "drag&Drop" :
-                me.dragAndDrop.dragAndDropScene( me.engine.getAccesName());
+                me.dragAndDrop.dragAndDropScene( me.engine.getAccessName());
                 break;
             case "followObject" :
                 me.functMove = me.dragAndDrop.followObject;
@@ -389,6 +398,7 @@ class Edition {
                     me.engine.clone = null;
                 };
             default :
+                console.log("Action defines : Incorrect ");
                 break;
         }
     }

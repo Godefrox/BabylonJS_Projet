@@ -48,9 +48,8 @@ class DragDrop{
             this.engine.vector = pickResult.pickedPoint;
             this.engine.vector.x -=  this.engine.center.x;
             this.engine.vector.z -=  this.engine.center.z;
-            this.engine.vector.y +=  this.engine.extendSize.y;
+            this.engine.vector.y =  this.engine.clone.scaling.y/2 +0.01;
         }
-
         this.engine.clone.position =  this.engine.vector;
     }
 

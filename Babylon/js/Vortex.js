@@ -12,8 +12,7 @@ class Vortex {
      <summary> : Allow to add vortex in mouse position in currently area
      */
     addVertex(){
-        let me = this;
-        this.engine.vector.y = 5;
+        this.engine.vector.y = Math.random() * 0.2;
         let area = this.engine.mapArea.get(this.engine.areaName);
         let path = null;
         let line = null;
@@ -37,7 +36,7 @@ class Vortex {
      <summary> : Allow to remove vortex in mouse position in currently area
      */
     removeVertex(){
-        this.engine.vector.y = 5;
+        this.engine.vector.y = 0.2;
         let area = this.engine.mapArea.get(this.engine.areaName);
         if(area !== undefined){
             let path = area.path;
@@ -78,7 +77,7 @@ class Vortex {
         if(area != undefined) {
             let path = area.path;
             let i = this.engine.edition.vortex.closestVortex(path);
-            this.engine.vector.y = 5;
+            this.engine.vector.y = 0.2;
             path.splice(i, 1, this.engine.vector);
             area.path = path;
             this.engine.edition.refreshArea(area);

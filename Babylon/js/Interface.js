@@ -43,7 +43,7 @@ class Interface{
             button2.top = el_Interface.topInPixels;
         }
         if(x !== 0 ){
-            button2.left = el_Interface.leftInPixels + el_Interface.widthInPixels/2 + button2.widthInPixels/2 + x;
+            button2.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
         }else{
             button2.left = el_Interface.leftInPixels;
         }
@@ -55,12 +55,72 @@ class Interface{
         this.advancedTexture.addControl(button2);
         return button2;
     }
+    //LE GENIE !!!!!
+    //Aussi résoudre le soucis de license
+    setArreaButton(el_Interface){
+        let map = this.engine.getMapArea();
+        let iteratorKeys = map.keys();
+        let i = 0;
+        let boutonsArea = [];
+        let button = null;
+        //BOUTON LEFT
+        let res = iteratorKeys.next();
+        console.log("INTERFACE");
+        let lastLeft = el_Interface.leftInPixels;
+        let lastWidth = el_Interface.widthInPixels;
+        console.log("lastLeft :" + lastLeft);
+        console.log("lastWidth :" + lastWidth);
+        let lastHorizontalAlignment = el_Interface.horizontalAlignment;
+        let lastVerticalAlignment = el_Interface.verticalAlignment;
+        while(!res.done){
+            button = BABYLON.GUI.Button.CreateSimpleButton(res.value, res.value);
+            button.width = ((30 + (res.value.length*10)) + "px");
+            console.log((30 + res.value.length*5) );
+            console.log((30 + res.value.length)+ "px" );
+            button.height = el_Interface.height;
+            console.log(button.height);
+            button.horizontalAlignment = lastHorizontalAlignment;
+            button.verticalAlignment = lastVerticalAlignment;
+            button.top = el_Interface.topInPixels;
+            console.log(lastLeft);
+            console.log(lastWidth/2);
+            console.log(button.widthInPixels/2);
+            button.left =  lastLeft + lastWidth;
+            lastWidth = button.widthInPixels;
+            lastLeft = button.leftInPixels;
+            console.log(lastLeft)
+            console.log(button.left);
+            button.color = el_Interface.color;
+            button.cornerRadius = el_Interface.cornerRadius;
+            button.background = el_Interface.background;
+            button.onPointerUpObservable.add(console.log(res.value));
+            this.advancedTexture.addControl(button);
+            boutonsArea.push(button);
+            res = iteratorKeys.next();
+            i++;
+        }
 
+        //BOUTON RIGHT
+        //BOUTTON ADD
+        //ACTION ADD
+        //TEXT AREA
+        //END ACTION ADD
+
+        console.log("Not Yet Implemented " + "COMMENTAIRE : UTILISER LE SYSTEME DE GRILLE PERMETANT AINSI D'AFFICHER" +
+            " UNE MULTITUDE DE NOM DE ZONE AU SEIN DE L'AFFICHAGE EN FONCTION DU NOMBRE DE ZONE FAIRE UNE CALCUL DE" +
+            " COLONNE ET LIGNE NECESSAIRE");
+        //Afficher une multitude de bouton sur la droite du sélecteur
+    }
+
+    setAccessButton(el_Interface){
+        console.log("Not Yet Implemented");
+        //Afficher une multitude de bouton sur la droite du sélecteur
+    }
     /**
      <summary> : Allow to  made new Text Area with the same model of one element in interface
      */
-    setTextAreaWithInterface(el_Interface,messageDefault,x,y){
-        let textInput = new BABYLON.GUI.InputText("areaNumber");
+    setTextAreaWithInterface(el_Interface,name,messageDefault,x,y){
+        let textInput = new BABYLON.GUI.InputText(name);
         textInput.width = "100px";
         textInput.maxWidth = "100px";
         textInput.height = "40px";
@@ -73,7 +133,7 @@ class Interface{
         }
 
         if(x !== 0 ){
-            textInput.left = el_Interface.leftInPixels + el_Interface.widthInPixels/2 + textInput.widthInPixels/2 + x;
+            textInput.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
         }else{
             textInput.left = el_Interface.leftInPixels;
         }
@@ -108,7 +168,7 @@ class Interface{
             picker.top = el_Interface.topInPixels;
         }
         if(x !== 0 ){
-            picker.left = el_Interface.leftInPixels + picture.widthInPixels/2 + picker.widthInPixels/2 + x;
+            picker.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
         }else{
             picker.left = el_Interface.leftInPixels;
         }

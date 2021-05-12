@@ -1,5 +1,5 @@
 import {Engine} from "./Engine";
-let visualisation = new Engine();;
+let visualisation = new Engine();
 
 visualisation.createDefaultEngine = function () {
     return new BABYLON.Engine(visualisation.canvas, true, {
