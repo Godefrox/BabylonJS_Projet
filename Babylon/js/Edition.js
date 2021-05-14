@@ -2,6 +2,10 @@ import {Vortex} from "./Vortex";
 import {DragDrop} from "./DragDrop";
 class Edition {
 
+    /**
+     * Variable needed for Edition, we need to defined the engine and ui. If you create a engine a edition was define by default
+     * @type {null}
+     */
     ui = null;
     engine = null;
     vortex = null;

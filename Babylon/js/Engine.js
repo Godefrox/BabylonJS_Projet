@@ -45,28 +45,56 @@ class Engine {
     extendSize = null;
     shiftBoolean = false;
 
+    /**
+     * Allow to get AreaName of actual area
+     * @returns {null,areaName}
+     */
     getAreaName() {
         return  this.areaName;
     }
 
+    /**
+     * Allow to get AccesName of actual acces you want to drag on the scene
+     * @returns {null}
+     */
     getAccessName() {
         return  this.accessName;
     }
 
+    /**
+     * Allow to get the MapArea they contains all Area in the scene, we need to synchronyse with MongoDB
+     * @returns {Map<any, any>}
+     */
     getMapArea(){
         return  this.mapArea;
     }
 
+    /**
+     * set the current Area you want to modify
+     * @param newAreaName
+     */
     setAreaName(newAreaName) {
+        if(typeof newAreaName === 'string'){
         this.areaName = newAreaName;
-    }
-
-    setAccessName(newAccessName) {
-        this.accessName = newAccessName;
+        }else{
+            console.log("AreaName : Type incorrect");
+        }
     }
 
     /**
-     * resizeCamera to have the best point of view
+     * set the current Acces you want to modify
+     * @param newAccessName
+     */
+    setAccessName(newAccessName) {
+        if(typeof newAccessName === 'string'){
+        this.accessName = newAccessName;
+        }else{
+            console.log("AccessName : Type incorrect");
+        }
+    }
+
+    /**
+     * resizeCamera to have the best point of view on mod you want
      */
     resizeCamera2D() {
         this.ratio = this.canvas.width / this.canvas.height;
@@ -77,10 +105,11 @@ class Engine {
         this.camera.orthoBottom = -this.zoom;
     }
 
-
-
-
-
+    /**
+     * When you use this function, the camera of the engine pass on Edition Mod, so you can place area or acces in scene.
+     * If you want to leave the mod you need to launch setCameraNormal
+     * And if you want to resize camera Launch resizeCamera2D
+     */
     setCameraEdition() {
         this.camera.detachControl();
         //Camera on 2D projection in 3D environement
@@ -93,15 +122,28 @@ class Engine {
         this.camera.cameraRotation = new BABYLON.Vector3(180,0,0);
     }
 
+    /**
+     * When you use this function, the camera of the engine pass on Normal Mod, so you can't place area or acces in scene.
+     * If you want to change the mod you need to launch setCameraEdition or other camera Mod
+     * And if you want to resize camera Launch resizeCamera2D
+     */
     setCameraNormal(){
         this.camera.attachControl(this.canvas, true);
         this.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA;
     }
 
+    /**
+     * set the current vector of mouse in 3D scene
+     * @param newVector
+     */
     setVector(newVector) {
         this.vector = newVector;
     }
 
+    /**
+     * get the current position of mouse in 3D scene
+     * @returns {null}
+     */
     getVector() {
         return this.vector;
     }
@@ -145,6 +187,7 @@ class Engine {
         })
         return this.scene;
     }
+
     /**
      * Allow to load the default scene
      * @returns {BABYLON.Scene}

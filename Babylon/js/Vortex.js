@@ -84,6 +84,7 @@ class Vortex {
             this.engine.mapArea.set(this.engine.areaName,area);
         }
     }
+
     /**
      * detect the closest vortex with position of vector (Mouse position in 3D)
      * @param path

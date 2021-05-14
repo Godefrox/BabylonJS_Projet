@@ -55,8 +55,11 @@ class Interface{
         this.advancedTexture.addControl(button2);
         return button2;
     }
-    //LE GENIE !!!!!
-    //Aussi résoudre le soucis de license
+
+    /**
+     * Set all buttons we need to choose for area you want to modify
+     * @param el_Interface
+     */
     setArreaButton(el_Interface){
         let map = this.engine.getMapArea();
         let iteratorKeys = map.keys();
@@ -112,10 +115,15 @@ class Interface{
         //Afficher une multitude de bouton sur la droite du sélecteur
     }
 
+    /**
+     * Set all buttons we need to choose for acces you want to modify
+     * @param el_Interface
+     */
     setAccessButton(el_Interface){
         console.log("Not Yet Implemented");
         //Afficher une multitude de bouton sur la droite du sélecteur
     }
+
     /**
      <summary> : Allow to  made new Text Area with the same model of one element in interface
      */
@@ -180,6 +188,11 @@ class Interface{
         this.advancedTexture.addControl(picker);
         return picker;
     }
+
+    /**
+     * get advanced texture, if you want to add some interface or get without interface class
+     * @returns {null}
+     */
     getAdvancedTexture(){
         return this.advancedTexture;
     }
