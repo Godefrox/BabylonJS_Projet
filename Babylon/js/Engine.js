@@ -2,8 +2,8 @@
 @Author : Godefroy MONTONATI
 @Module : Visualisation 3D
  */
-import {Interface} from "./Interface";
-import {Edition} from "./Edition";
+import {Interface} from "./Interface.js";
+import {Edition} from "./Edition.js";
 
 class Engine {
 

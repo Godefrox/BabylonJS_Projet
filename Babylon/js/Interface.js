@@ -60,6 +60,7 @@ class Interface{
      * Set all buttons we need to choose for area you want to modify
      * @param el_Interface
      */
+    /*
     setArreaButton(el_Interface){
         let map = this.engine.getMapArea();
         let iteratorKeys = map.keys();
@@ -112,6 +113,30 @@ class Interface{
         console.log("Not Yet Implemented " + "COMMENTAIRE : UTILISER LE SYSTEME DE GRILLE PERMETANT AINSI D'AFFICHER" +
             " UNE MULTITUDE DE NOM DE ZONE AU SEIN DE L'AFFICHAGE EN FONCTION DU NOMBRE DE ZONE FAIRE UNE CALCUL DE" +
             " COLONNE ET LIGNE NECESSAIRE");
+        //Afficher une multitude de bouton sur la droite du sélecteur
+    }
+    */
+    setArreaButton(el_Interface){
+        let map = this.engine.getMapArea();
+        let iteratorKeys = map.keys();
+        let res = iteratorKeys.next();
+        console.log("Get ALL KEY");
+        while(!res.done){
+            console.log(res.value);
+            res = iteratorKeys.next();
+            i++;
+        }
+        console.log("Get All KEY Stop");
+
+        //BOUTON RIGHT
+        //BOUTTON ADD
+        //ACTION ADD
+        //TEXT AREA
+        //END ACTION ADD
+/*
+        console.log("Not Yet Implemented " + "COMMENTAIRE : UTILISER LE SYSTEME DE GRILLE PERMETANT AINSI D'AFFICHER" +
+            " UNE MULTITUDE DE NOM DE ZONE AU SEIN DE L'AFFICHAGE EN FONCTION DU NOMBRE DE ZONE FAIRE UNE CALCUL DE" +
+            " COLONNE ET LIGNE NECESSAIRE");*/
         //Afficher une multitude de bouton sur la droite du sélecteur
     }
 

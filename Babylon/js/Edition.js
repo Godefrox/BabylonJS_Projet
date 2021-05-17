@@ -1,5 +1,6 @@
-import {Vortex} from "./Vortex";
-import {DragDrop} from "./DragDrop";
+import {Vortex} from "./Vortex.js";
+import {DragDrop} from "./DragDrop.js";
+
 class Edition {
 
     /**
