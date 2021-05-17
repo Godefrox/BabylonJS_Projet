@@ -1,4 +1,5 @@
 import {Engine} from "./Engine.js";
+
 let visualisation = new Engine();
 
 visualisation.createDefaultEngine = function () {
@@ -19,9 +20,9 @@ visualisation.initFunction = async function () {
     }
 
     visualisation.engine = await asyncEngineCreation();
-    if (! visualisation.engine) throw 'engine should not be null.';
+    if (!visualisation.engine) throw 'engine should not be null.';
     visualisation.scene = visualisation.defaultScene();
-    visualisation.canvas.addEventListener('wheel', function (event){
+    visualisation.canvas.addEventListener('wheel', function (event) {
         visualisation.zoom += event.deltaY * +0.01;
         // Restrict scale
         visualisation.zoom = Math.min(Math.max(visualisation.minZoom, visualisation.zoom), visualisation.maxZoom);
@@ -29,7 +30,8 @@ visualisation.initFunction = async function () {
     });
 
 };
-visualisation.initFunction().then(() => {visualisation.sceneToRender = visualisation.scene
+visualisation.initFunction().then(() => {
+    visualisation.sceneToRender = visualisation.scene
     visualisation.engine.runRenderLoop(function () {
         if (visualisation.sceneToRender && visualisation.sceneToRender.activeCamera) {
             visualisation.sceneToRender.render();

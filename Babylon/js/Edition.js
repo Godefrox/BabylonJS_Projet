@@ -16,14 +16,14 @@ class Edition {
     shiftBoolean = false;
     dragAndDrop = null;
 
-    constructor(engine,ui) {
+    constructor(engine, ui) {
         this.engine = engine;
         this.ui = ui;
         this.vortex = new Vortex(engine);
         this.dragAndDrop = new DragDrop(engine);
     }
 
-    line2D (name, options, scene) {
+    line2D(name, options, scene) {
         //Arrays for vertex positions and indices
         let positions = [];
         let indices = [];
@@ -202,19 +202,19 @@ class Edition {
     /**
      * editMod allow to add, supress, modify vertex of area in 3D environement with mouse button (left, middle, right) and to drag&Drop
      */
-    editMod(button){
+    editMod(button) {
         let littleEngine = this.engine;
         let drag = this.dragAndDrop;
         let interfaces = this.interfaces;
         let me = this;
         button.onPointerUpObservable.clear();
-        button.onPointerUpObservable.add(function(){
+        button.onPointerUpObservable.add(function () {
             interfaces.forEach(e => e.isVisible = false);
             me.functDown = null;
             me.functMove = null;
             littleEngine.setCameraNormal();
             button.onPointerUpObservable.clear();
-            button.onPointerUpObservable.add(function(){
+            button.onPointerUpObservable.add(function () {
                 littleEngine.edition.editMod(button);
             })
         })
@@ -222,68 +222,74 @@ class Edition {
         littleEngine.setCameraEdition();
         //Specification necessary for 2D visualisation on 3D environement
         littleEngine.resizeCamera2D();
-        if(interfaces.length <= 0){
-        //Allow to specify in textInput the currently name of area you want to modify
-        let textInputArea = this.ui.setTextAreaWithInterface(button,"areaNumber","1",0,10);
-        textInputArea.onTextChangedObservable.add(function(event) {
-            littleEngine.setAreaName(textInputArea.text);
-        });
-        interfaces.push(textInputArea);
-        //Set areaName in global variable
-        littleEngine.setAreaName(textInputArea.text);
-        //List of boutons
-        let buttonAdd = this.ui.setButtonWithInterface(textInputArea,"button_add","add",0,10,function(){me.selectAction("add")});
+        if (interfaces.length <= 0) {
+            //Allow to specify in textInput the currently name of area you want to modify
+            let textInputArea = this.ui.setButtonWithInterface(button, "areaNumber", "1", 0, 10, function () {
+                me.ui.setArreaButton(textInputArea)
+            });
+            interfaces.push(textInputArea);
+            //Set areaName in global variable
+            littleEngine.setAreaName(textInputArea.textBlock.text);
+            //List of boutons
+            let buttonAdd = this.ui.setButtonWithInterface(textInputArea, "button_add", "add", 0, 10, function () {
+                me.selectAction("add")
+            });
             interfaces.push(buttonAdd);
-        let buttonRemove = this.ui.setButtonWithInterface(buttonAdd,"button_remove","remove",0,10,function() {me.selectAction("remove");});
+            let buttonRemove = this.ui.setButtonWithInterface(buttonAdd, "button_remove", "remove", 0, 10, function () {
+                me.selectAction("remove");
+            });
             interfaces.push(buttonRemove);
-        let buttonModify = this.ui.setButtonWithInterface(buttonRemove,"button_modify","modify",0,10,function() {me.selectAction("modify");});
+            let buttonModify = this.ui.setButtonWithInterface(buttonRemove, "button_modify", "modify", 0, 10, function () {
+                me.selectAction("modify");
+            });
             interfaces.push(buttonModify);
-        //Picker Color to change color of area
-        let pickerRGB = this.ui.setPickerWithInterface(buttonModify,0,10,function(value) { // value is a color3
-            let area = littleEngine.mapArea.get(littleEngine.getAreaName());
-            if(area !== undefined){
-                area.color = new BABYLON.Color3(value.r,value.g,value.b);
-                me.refreshArea(area);
-                littleEngine.mapArea.set(littleEngine.getAreaName(),area);
-            }
-        });
+            //Picker Color to change color of area
+            let pickerRGB = this.ui.setPickerWithInterface(buttonModify, 0, 10, function (value) { // value is a color3
+                let area = littleEngine.mapArea.get(littleEngine.getAreaName());
+                if (area !== undefined) {
+                    area.color = new BABYLON.Color3(value.r, value.g, value.b);
+                    me.refreshArea(area);
+                    littleEngine.mapArea.set(littleEngine.getAreaName(), area);
+                }
+            });
             interfaces.push(pickerRGB);
-        //Bountons to take on Drag & Drop
-        let buttonDragDrop = this.ui.setButtonWithInterface(pickerRGB,"button_drag&Drop","drag&Drop",0,10,function() {me.selectAction("drag&Drop")});
-        buttonDragDrop.height = buttonModify.height;
-        buttonDragDrop.width = buttonModify.width;
+            //Bountons to take on Drag & Drop
+            let buttonDragDrop = this.ui.setButtonWithInterface(pickerRGB, "button_drag&Drop", "drag&Drop", 0, 10, function () {
+                me.selectAction("drag&Drop")
+            });
+            buttonDragDrop.height = buttonModify.height;
+            buttonDragDrop.width = buttonModify.width;
             interfaces.push(buttonDragDrop);
-        //Area Text to choose name of access
-        let textInputAccess = this.ui.setTextAreaWithInterface(buttonDragDrop,"accesArea","access1",0,10);
-        textInputAccess.onTextChangedObservable.add(function(event) {
+            //Area Text to choose name of access
+            let textInputAccess = this.ui.setTextAreaWithInterface(buttonDragDrop, "accesArea", "access1", 0, 10);
+            textInputAccess.onTextChangedObservable.add(function (event) {
+                littleEngine.setAccessName(textInputAccess.text);
+            });
+            //Set areaName in global variable
             littleEngine.setAccessName(textInputAccess.text);
-        });
-        //Set areaName in global variable
-        littleEngine.setAccessName(textInputAccess.text);
             interfaces.push(textInputAccess);
-        }else{
-            interfaces.forEach(e => {e.isVisible = true;
-               if( e.name == "areaNumber" ){
-                   console.log("ET OH");
-                   this.ui.setArreaButton(e);
-                   console.log("JE SUIS EN VIE");
-               }
+        } else {
+            interfaces.forEach(e => {
+                e.isVisible = true;
+                if (e.name == "areaNumber") {
+                    this.ui.setArreaButton(e);
+                }
             });
         }
 
         //Allow to launch a function if pointer has click
         littleEngine.scene.onPointerDown = function (event, pickResult) {
             littleEngine.setVector(pickResult.pickedPoint);
-            if(me.functDown != null){
+            if (me.functDown != null) {
                 me.functDown();
             }
         }
-       
+
         //Allow to launch a function if pointer move.
-        littleEngine.scene.onPointerMove = function(event,pickResult){
-            if(me.functMove != null){
-                if(!me.shiftBoolean){
-                    littleEngine.setVector(littleEngine.scene.pick(littleEngine.scene.pointerX,littleEngine.scene.pointerY).pickedPoint);
+        littleEngine.scene.onPointerMove = function (event, pickResult) {
+            if (me.functMove != null) {
+                if (!me.shiftBoolean) {
+                    littleEngine.setVector(littleEngine.scene.pick(littleEngine.scene.pointerX, littleEngine.scene.pointerY).pickedPoint);
                 }
                 me.functMove();
             }
@@ -292,9 +298,9 @@ class Edition {
         littleEngine.scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
-                    if(kbInfo.event.key === "Shift"){
-                        if(littleEngine.clone != null){
-                            if(!me.shiftBoolean ){
+                    if (kbInfo.event.key === "Shift") {
+                        if (littleEngine.clone != null) {
+                            if (!me.shiftBoolean) {
                                 littleEngine.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA
                                 littleEngine.camera.attachControl(littleEngine.canvas, true);
                                 littleEngine.camera.position = new BABYLON.Vector3(littleEngine.clone.position.x, littleEngine.clone.position.y, littleEngine.clone.position.z);
@@ -310,7 +316,7 @@ class Edition {
                     }
                     break;
                 case BABYLON.KeyboardEventTypes.KEYUP:
-                    if(kbInfo.event.key === "Shift"){
+                    if (kbInfo.event.key === "Shift") {
                         me.shiftBoolean = false;
                         littleEngine.oldPointer = null;
                         littleEngine.setCameraEdition();
@@ -335,39 +341,38 @@ class Edition {
      mapArea.set(areaName,area);
      }
      */
-    refreshArea(area){
-        if(area.line != undefined){
+    refreshArea(area) {
+        if (area.line != undefined) {
             area.line.dispose();
         }
-        if(area.path.length >= 2){
+        if (area.path.length >= 2) {
             //LIGNE
-            if(false){
-            area.line = this.line2D("line", {path:  area.path, width:1, closed:true}, this.engine.scene);
-            area.line.material = new BABYLON.StandardMaterial("", this.engine.scene);
-            area.line.material.alpha = 0.8;
-            area.line.material.diffuseColor = BABYLON.Color3.Black();
+            if (false) {
+                area.line = this.line2D("line", {path: area.path, width: 1, closed: true}, this.engine.scene);
+                area.line.material = new BABYLON.StandardMaterial("", this.engine.scene);
+                area.line.material.alpha = 0.8;
+                area.line.material.diffuseColor = BABYLON.Color3.Black();
             }
 
-            if ( area.polygon != undefined) {
+            if (area.polygon != undefined) {
                 area.polygon.dispose();
             }
 
-            if( area.path.length >= 3) {
+            if (area.path.length >= 3) {
                 area.polygon = BABYLON.MeshBuilder.ExtrudePolygon("polygon", {
-                    shape:  area.path,
+                    shape: area.path,
                     depth: 5
                 }, this.engine.scene);
                 area.polygon.position.y = 5.2
                 area.polygon.material = new BABYLON.StandardMaterial("red", this.engine.scene);
                 area.polygon.material.alpha = 0.6;
-                area.polygon.material.diffuseColor =  area.color;
+                area.polygon.material.diffuseColor = area.color;
                 area.polygon.material.backFaceCulling = false;
-                console.log(area);
 
 
             }
         }
-}
+    }
 
     /**
      * allow to synchronize the function you want to launch with pointer and in general case
@@ -375,6 +380,9 @@ class Edition {
      */
     selectAction(action) {
         let me = this;
+        if (this.ui != null) {
+            this.ui.cleanUi();
+        }
         switch (action) {
             case "add" :
                 me.functDown = me.vortex.addVertex;
@@ -393,7 +401,7 @@ class Edition {
                 me.functMove = me.vortex.followVertex;
                 break;
             case "drag&Drop" :
-                me.dragAndDrop.dragAndDropScene( me.engine.getAccessName());
+                me.dragAndDrop.dragAndDropScene(me.engine.getAccessName());
                 break;
             case "followObject" :
                 me.functMove = me.dragAndDrop.followObject;
@@ -409,6 +417,6 @@ class Edition {
     }
 
 
-
 }
+
 export {Edition};

@@ -1,8 +1,9 @@
-class Interface{
+class Interface {
     advancedTexture = null;
     engine = null;
-    
-    constructor(myEngine){
+    uiNotEssential = [];
+
+    constructor(myEngine) {
         this.advancedTexture = new BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
         this.engine = myEngine;
     }
@@ -10,7 +11,7 @@ class Interface{
     /**
      <summary> : Allow to  made new model of button
      */
-    setButton(nom,message,horizontalAlignment,verticalAlignment,x,y,radius,outlineColor,backgroundColor,action){
+    setButton(nom, message, horizontalAlignment, verticalAlignment, x, y, radius, outlineColor, backgroundColor, action) {
         let button = BABYLON.GUI.Button.CreateSimpleButton(nom, message);
         button.width = "100px";
         button.height = "40px";
@@ -31,20 +32,20 @@ class Interface{
     /**
      <summary> : Allow to  made new button with the same model of one element in interface
      */
-    setButtonWithInterface(el_Interface,nom,message,x,y,action){
+    setButtonWithInterface(el_Interface, nom, message, x, y, action) {
         let button2 = BABYLON.GUI.Button.CreateSimpleButton(nom, message);
         button2.width = el_Interface.width;
         button2.height = el_Interface.height;
         button2.horizontalAlignment = el_Interface.horizontalAlignment;
         button2.verticalAlignment = el_Interface.verticalAlignment;
-        if(y !== 0 ){
-            button2.top = el_Interface.topInPixels + el_Interface.heightInPixels/2 + button2.heightInPixels/2 + y;
-        }else{
+        if (y !== 0) {
+            button2.top = el_Interface.topInPixels + el_Interface.heightInPixels / 2 + button2.heightInPixels / 2 + y;
+        } else {
             button2.top = el_Interface.topInPixels;
         }
-        if(x !== 0 ){
+        if (x !== 0) {
             button2.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
-        }else{
+        } else {
             button2.left = el_Interface.leftInPixels;
         }
 
@@ -60,91 +61,142 @@ class Interface{
      * Set all buttons we need to choose for area you want to modify
      * @param el_Interface
      */
-    /*
-    setArreaButton(el_Interface){
+
+    setArreaButton(el_Interface) {
         let map = this.engine.getMapArea();
         let iteratorKeys = map.keys();
-        let i = 0;
-        let boutonsArea = [];
-        let button = null;
-        //BOUTON LEFT
         let res = iteratorKeys.next();
-        console.log("INTERFACE");
-        let lastLeft = el_Interface.leftInPixels;
-        let lastWidth = el_Interface.widthInPixels;
-        console.log("lastLeft :" + lastLeft);
-        console.log("lastWidth :" + lastWidth);
-        let lastHorizontalAlignment = el_Interface.horizontalAlignment;
-        let lastVerticalAlignment = el_Interface.verticalAlignment;
-        while(!res.done){
-            button = BABYLON.GUI.Button.CreateSimpleButton(res.value, res.value);
-            button.width = ((30 + (res.value.length*10)) + "px");
-            console.log((30 + res.value.length*5) );
-            console.log((30 + res.value.length)+ "px" );
-            button.height = el_Interface.height;
-            console.log(button.height);
-            button.horizontalAlignment = lastHorizontalAlignment;
-            button.verticalAlignment = lastVerticalAlignment;
-            button.top = el_Interface.topInPixels;
-            console.log(lastLeft);
-            console.log(lastWidth/2);
-            console.log(button.widthInPixels/2);
-            button.left =  lastLeft + lastWidth;
-            lastWidth = button.widthInPixels;
-            lastLeft = button.leftInPixels;
-            console.log(lastLeft)
-            console.log(button.left);
-            button.color = el_Interface.color;
-            button.cornerRadius = el_Interface.cornerRadius;
-            button.background = el_Interface.background;
-            button.onPointerUpObservable.add(console.log(res.value));
-            this.advancedTexture.addControl(button);
-            boutonsArea.push(button);
+        let tab = [];
+        let tabSecondary = [];
+        let oldLength = 0;
+        let arrayUi = [];
+        let advancedTexture = this.advancedTexture;
+        let littleEngine = this.engine;
+        let nouvelleZoneTexte = new BABYLON.GUI.InputText("textZoneArrea");
+        nouvelleZoneTexte.width = 0.15;
+        nouvelleZoneTexte.height = "50px";
+        nouvelleZoneTexte.text = el_Interface.textBlock.text;
+        nouvelleZoneTexte.color = el_Interface.color;
+        nouvelleZoneTexte.background = el_Interface.background;
+        advancedTexture.addControl(nouvelleZoneTexte);
+        let lastInterface = nouvelleZoneTexte;
+        while (!res.done) {
+            tab.push(res.value);
+            tabSecondary.push(res.value);
             res = iteratorKeys.next();
-            i++;
+        }
+        let functNewButton = function (el_Interface_Position, name) {
+            let button2 = BABYLON.GUI.Button.CreateSimpleButton(name, name);
+            button2.width = 0.1;
+            button2.height = el_Interface_Position.height;
+            button2.top = el_Interface_Position.topInPixels + el_Interface_Position.heightInPixels / 2 + button2.heightInPixels / 2;
+            button2.left = el_Interface_Position.leftInPixels;
+            button2.color = el_Interface_Position.color;
+            button2.background = el_Interface_Position.background;
+            if (name !== "+") {
+                button2.onPointerUpObservable.add(function () {
+                    el_Interface.textBlock.text = name;
+                    advancedTexture.removeControl(nouvelleZoneTexte);
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    littleEngine.setAreaName(name);
+                });
+            } else {
+                button2.onPointerUpObservable.add(function () {
+                    el_Interface.textBlock.text = nouvelleZoneTexte.text;
+                    oldLength = nouvelleZoneTexte.length;
+                    advancedTexture.removeControl(nouvelleZoneTexte);
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    littleEngine.setAreaName(nouvelleZoneTexte.text);
+                });
+            }
+            advancedTexture.addControl(button2);
+            return button2;
+        }
+        if (tab.length === tabSecondary.length) {
+            nouvelleZoneTexte.onTextChangedObservable.add(function (event) {
+                let already = null;
+                let textAlready = null;
+                tab.forEach(e => { if(e === nouvelleZoneTexte.text){
+                    already = functNewButton(lastInterface, e);
+                    textAlready = already.textBlock.text;
+                    lastInterface = already;
+                }});
+                if (nouvelleZoneTexte.text.length < oldLength && nouvelleZoneTexte.text.length !== 0) {
+                    tabSecondary = [];
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    if(already != null){
+                        tabSecondary.push(textAlready);
+                        arrayUi.push(already);
+                    }
+                    tab.forEach(e => {
+                        if (e !== nouvelleZoneTexte.text && e.includes(nouvelleZoneTexte.text)) {
+                            tabSecondary.push(e);
+
+                            if (tabSecondary.length <= 5) {
+                                let b = functNewButton(lastInterface, e);
+                                arrayUi.push(b);
+                                lastInterface = b;
+                            }
+                        }
+                    });
+                    oldLength = nouvelleZoneTexte.text.length;
+                } else if (nouvelleZoneTexte.text.length > oldLength) {
+                    let otherTab = [];
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    if(already != null){
+                        otherTab.push(textAlready);
+                        arrayUi.push(already);
+                    }
+                    tabSecondary.forEach(e => {
+                        if (e !== nouvelleZoneTexte.text && e.includes(nouvelleZoneTexte.text)) {
+                            otherTab.push(e);
+
+                            if (otherTab.length <= 5) {
+                                let b = functNewButton(lastInterface, e);
+                                arrayUi.push(b);
+                                lastInterface = b;
+                            }
+
+                        }
+                    });
+                    tabSecondary = otherTab;
+                    oldLength = nouvelleZoneTexte.text.length;
+                } else {
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    tabSecondary = [];
+                    tab.forEach(e => tabSecondary.push(e));
+                    oldLength = 0;
+                }
+                if (already === null && nouvelleZoneTexte.text.length > 0) {
+                    arrayUi.push(functNewButton(lastInterface, "+"));
+                    nouvelleZoneTexte.uis = arrayUi;
+                }
+                lastInterface = nouvelleZoneTexte;
+            });
         }
 
-        //BOUTON RIGHT
-        //BOUTTON ADD
-        //ACTION ADD
-        //TEXT AREA
-        //END ACTION ADD
-
-        console.log("Not Yet Implemented " + "COMMENTAIRE : UTILISER LE SYSTEME DE GRILLE PERMETANT AINSI D'AFFICHER" +
-            " UNE MULTITUDE DE NOM DE ZONE AU SEIN DE L'AFFICHAGE EN FONCTION DU NOMBRE DE ZONE FAIRE UNE CALCUL DE" +
-            " COLONNE ET LIGNE NECESSAIRE");
-        //Afficher une multitude de bouton sur la droite du sélecteur
+        nouvelleZoneTexte.uis = arrayUi;
+        this.uiNotEssential.push(nouvelleZoneTexte);
     }
-    */
-    setArreaButton(el_Interface){
-        let map = this.engine.getMapArea();
-        let iteratorKeys = map.keys();
-        let res = iteratorKeys.next();
-        console.log("Get ALL KEY");
-        while(!res.done){
-            console.log(res.value);
-            res = iteratorKeys.next();
-            i++;
-        }
-        console.log("Get All KEY Stop");
 
-        //BOUTON RIGHT
-        //BOUTTON ADD
-        //ACTION ADD
-        //TEXT AREA
-        //END ACTION ADD
-/*
-        console.log("Not Yet Implemented " + "COMMENTAIRE : UTILISER LE SYSTEME DE GRILLE PERMETANT AINSI D'AFFICHER" +
-            " UNE MULTITUDE DE NOM DE ZONE AU SEIN DE L'AFFICHAGE EN FONCTION DU NOMBRE DE ZONE FAIRE UNE CALCUL DE" +
-            " COLONNE ET LIGNE NECESSAIRE");*/
-        //Afficher une multitude de bouton sur la droite du sélecteur
+    cleanUi() {
+        this.uiNotEssential.forEach(e => {
+            if (e.uis !== undefined && e.uis != null) {
+                e.uis.forEach(e => this.advancedTexture.removeControl(e));
+            }
+            this.advancedTexture.removeControl(e)
+        });
+        this.uiNotEssential = [];
     }
 
     /**
      * Set all buttons we need to choose for acces you want to modify
      * @param el_Interface
      */
-    setAccessButton(el_Interface){
+    setAccessButton(el_Interface) {
         console.log("Not Yet Implemented");
         //Afficher une multitude de bouton sur la droite du sélecteur
     }
@@ -152,22 +204,22 @@ class Interface{
     /**
      <summary> : Allow to  made new Text Area with the same model of one element in interface
      */
-    setTextAreaWithInterface(el_Interface,name,messageDefault,x,y){
+    setTextAreaWithInterface(el_Interface, name, messageDefault, x, y) {
         let textInput = new BABYLON.GUI.InputText(name);
         textInput.width = "100px";
         textInput.maxWidth = "100px";
         textInput.height = "40px";
         textInput.horizontalAlignment = el_Interface.horizontalAlignment;
         textInput.verticalAlignment = el_Interface.verticalAlignment;
-        if(y !== 0 ){
-            textInput.top = el_Interface.topInPixels + el_Interface.heightInPixels/2 + textInput.heightInPixels/2 + y;
-        }else{
+        if (y !== 0) {
+            textInput.top = el_Interface.topInPixels + el_Interface.heightInPixels / 2 + textInput.heightInPixels / 2 + y;
+        } else {
             textInput.top = el_Interface.topInPixels;
         }
 
-        if(x !== 0 ){
+        if (x !== 0) {
             textInput.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
-        }else{
+        } else {
             textInput.left = el_Interface.leftInPixels;
         }
 
@@ -177,32 +229,33 @@ class Interface{
         this.advancedTexture.addControl(textInput);
         return textInput;
     }
+
     /**
      <summary> : Allow to  made new Pickera with the same model of one element in interface
      */
-    setPickerWithInterface(el_Interface,x,y,action){
+    setPickerWithInterface(el_Interface, x, y, action) {
         let picker = new BABYLON.GUI.ColorPicker();
         let area = this.engine.mapArea.get(this.engine.getAreaName());
-        if(area !== undefined){
+        if (area !== undefined) {
             picker.value = area.color;
-        }else{
-            picker.value = new BABYLON.Color3(0,0,0);
+        } else {
+            picker.value = new BABYLON.Color3(0, 0, 0);
         }
         picker.height = "100px";
         picker.width = "100px";
         picker.horizontalAlignment = el_Interface.horizontalAlignment;
         picker.verticalAlignment = el_Interface.verticalAlignment;
-        if(y !== 0 ){
+        if (y !== 0) {
             //EN THEORIE
             //picker.top = interface.topInPixels + interface.heightInPixels/2 + picker.heightInPixels/2 + y ;
             // EN PRATIQUE
-            picker.top = el_Interface.topInPixels + picker.heightInPixels/2;
-        }else{
+            picker.top = el_Interface.topInPixels + picker.heightInPixels / 2;
+        } else {
             picker.top = el_Interface.topInPixels;
         }
-        if(x !== 0 ){
+        if (x !== 0) {
             picker.left = el_Interface.leftInPixels + el_Interface.widthInPixels + x;
-        }else{
+        } else {
             picker.left = el_Interface.leftInPixels;
         }
         picker.color = "white";
@@ -218,8 +271,9 @@ class Interface{
      * get advanced texture, if you want to add some interface or get without interface class
      * @returns {null}
      */
-    getAdvancedTexture(){
+    getAdvancedTexture() {
         return this.advancedTexture;
     }
 }
+
 export {Interface};
