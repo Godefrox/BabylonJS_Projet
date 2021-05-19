@@ -1,4 +1,4 @@
-class Vortex {
+export default class Vortex {
 
     engine = null;
 
@@ -103,4 +103,3 @@ class Vortex {
     }
 }
 
-export {Vortex};

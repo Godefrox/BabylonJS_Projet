@@ -2,10 +2,10 @@
  @Author : Godefroy MONTONATI
  @Module : Visualisation 3D
  */
-import {Interface} from "./Interface.js";
-import {Edition} from "./Edition.js";
+import Interface from "./Interface.js";
+import Edition from "./Edition.js";
 
-class Engine {
+export default class Engine {
 
     /**
      Ensemble de variables spécifiques à Babylon JS
@@ -39,11 +39,16 @@ class Engine {
      * polygon: polygon,
      * color : color}
      */
-    controleAccess = [];
+    AccessControl = [];
     boundingBox = null;
     center = null;
     extendSize = null;
     shiftBoolean = false;
+    earcut = null;
+
+    constructor(earcut) {
+        this.earcut = earcut;
+    }
 
     /**
      * Allow to get AreaName of actual area
@@ -91,6 +96,10 @@ class Engine {
         } else {
             console.log("AccessName : Type incorrect");
         }
+    }
+
+    getAccessControl(){
+        return this.AccessControl;
     }
 
     /**
@@ -172,15 +181,15 @@ class Engine {
 
         // GUI
         this.ui = new Interface(this);
-        this.edition = new Edition(this, this.ui);
+        this.edition = new Edition(this, this.ui,this.earcut);
         let edit = this.edition;
         let button = this.ui.setButton("button_area_editor", "area editor", BABYLON.GUI.Control.VERTICALALIGNMENT_TOP, BABYLON.GUI.Control.HORIZONTAlALIGNMENT_LEFT, 10, 10, 20, "white", "green", function () {
             edit.editMod(button);
         });
-        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access1", this.scene));
-        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access2", this.scene));
-        this.controleAccess.push(BABYLON.MeshBuilder.CreateBox("access3", this.scene));
-        this.controleAccess.forEach(e => {
+        this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access1", this.scene));
+        this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access2", this.scene));
+        this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access3", this.scene));
+        this.AccessControl.forEach(e => {
             e.isVisible = false;
             e.material = new BABYLON.StandardMaterial((e.name + "_material"), this.scene);
             e.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random, Math.random);
@@ -193,10 +202,8 @@ class Engine {
      * @returns {BABYLON.Scene}
      */
     defaultScene = function () {
-        return this.createScene("scene/prototype.babylon")
+        return this.createScene("prototype.babylon")
     }
 
 
 }
-
-export {Engine}

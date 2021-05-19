@@ -1,4 +1,4 @@
-import {Engine} from "./Engine.js";
+import Engine from "./Engine.js";
 
 let visualisation = new Engine();
 

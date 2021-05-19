@@ -1,4 +1,4 @@
-class DragDrop {
+export default class DragDrop {
     engine = null;
 
     constructor(engine) {
@@ -68,5 +68,3 @@ class DragDrop {
     }
 
 }
-
-export {DragDrop};

@@ -1,4 +1,4 @@
-class Interface {
+export default class Interface {
     advancedTexture = null;
     engine = null;
     uiNotEssential = [];
@@ -182,6 +182,119 @@ class Interface {
         this.uiNotEssential.push(nouvelleZoneTexte);
     }
 
+    setAccessButton(el_Interface) {
+        let tab = this.engine.getAccessControl();
+        let tabSecondary = [];
+        let oldLength = 0;
+        let arrayUi = [];
+        let advancedTexture = this.advancedTexture;
+        let littleEngine = this.engine;
+        let nouvelleZoneTexte = new BABYLON.GUI.InputText("textAccessArrea");
+        nouvelleZoneTexte.width = 0.15;
+        nouvelleZoneTexte.height = "50px";
+        nouvelleZoneTexte.text = el_Interface.textBlock.text;
+        nouvelleZoneTexte.color = el_Interface.color;
+        nouvelleZoneTexte.background = el_Interface.background;
+        advancedTexture.addControl(nouvelleZoneTexte);
+        let lastInterface = nouvelleZoneTexte;
+        tab.forEach(e => tabSecondary.push(e));
+        let functNewButton = function (el_Interface_Position, name) {
+            let button2 = BABYLON.GUI.Button.CreateSimpleButton(name, name);
+            button2.width = 0.1;
+            button2.height = el_Interface_Position.height;
+            button2.top = el_Interface_Position.topInPixels + el_Interface_Position.heightInPixels / 2 + button2.heightInPixels / 2;
+            button2.left = el_Interface_Position.leftInPixels;
+            button2.color = el_Interface_Position.color;
+            button2.background = el_Interface_Position.background;
+            if (name !== "+") {
+                button2.onPointerUpObservable.add(function () {
+                    el_Interface.textBlock.text = name;
+                    advancedTexture.removeControl(nouvelleZoneTexte);
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    littleEngine.setAccessName(name);
+                });
+            } else {
+                button2.onPointerUpObservable.add(function () {
+                    el_Interface.textBlock.text = nouvelleZoneTexte.text;
+                    oldLength = nouvelleZoneTexte.length;
+                    advancedTexture.removeControl(nouvelleZoneTexte);
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    littleEngine.setAccessName(nouvelleZoneTexte.text);
+                });
+            }
+            advancedTexture.addControl(button2);
+            return button2;
+        }
+        if (tab.length === tabSecondary.length) {
+            nouvelleZoneTexte.onTextChangedObservable.add(function (event) {
+                let already = null;
+                let textAlready = null;
+                tab.forEach(e => { if(e === nouvelleZoneTexte.text){
+                    already = functNewButton(lastInterface, e);
+                    textAlready = already.textBlock.text;
+                    lastInterface = already;
+                }});
+                if (nouvelleZoneTexte.text.length < oldLength && nouvelleZoneTexte.text.length !== 0) {
+                    tabSecondary = [];
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    if(already != null){
+                        tabSecondary.push(textAlready);
+                        arrayUi.push(already);
+                    }
+                    tab.forEach(e => {
+                        if (e !== nouvelleZoneTexte.text && e.includes(nouvelleZoneTexte.text)) {
+                            tabSecondary.push(e);
+
+                            if (tabSecondary.length <= 5) {
+                                let b = functNewButton(lastInterface, e);
+                                arrayUi.push(b);
+                                lastInterface = b;
+                            }
+                        }
+                    });
+                    oldLength = nouvelleZoneTexte.text.length;
+                } else if (nouvelleZoneTexte.text.length > oldLength) {
+                    let otherTab = [];
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    if(already != null){
+                        otherTab.push(textAlready);
+                        arrayUi.push(already);
+                    }
+                    tabSecondary.forEach(e => {
+                        if (e !== nouvelleZoneTexte.text && e.includes(nouvelleZoneTexte.text)) {
+                            otherTab.push(e);
+
+                            if (otherTab.length <= 5) {
+                                let b = functNewButton(lastInterface, e);
+                                arrayUi.push(b);
+                                lastInterface = b;
+                            }
+
+                        }
+                    });
+                    tabSecondary = otherTab;
+                    oldLength = nouvelleZoneTexte.text.length;
+                } else {
+                    arrayUi.forEach(e => advancedTexture.removeControl(e));
+                    arrayUi = [];
+                    tabSecondary = [];
+                    tab.forEach(e => tabSecondary.push(e));
+                    oldLength = 0;
+                }
+                if (already === null && nouvelleZoneTexte.text.length > 0) {
+                    arrayUi.push(functNewButton(lastInterface, "+"));
+                    nouvelleZoneTexte.uis = arrayUi;
+                }
+                lastInterface = nouvelleZoneTexte;
+            });
+        }
+
+        nouvelleZoneTexte.uis = arrayUi;
+        this.uiNotEssential.push(nouvelleZoneTexte);
+    }
+
     cleanUi() {
         this.uiNotEssential.forEach(e => {
             if (e.uis !== undefined && e.uis != null) {
@@ -275,5 +388,3 @@ class Interface {
         return this.advancedTexture;
     }
 }
-
-export {Interface};

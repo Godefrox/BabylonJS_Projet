@@ -1,7 +1,7 @@
-import {Vortex} from "./Vortex.js";
-import {DragDrop} from "./DragDrop.js";
+import Vortex from "./Vortex.js";
+import DragDrop from "./DragDrop.js";
 
-class Edition {
+export default class Edition {
 
     /**
      * Variable needed for Edition, we need to defined the engine and ui. If you create a engine a edition was define by default
@@ -15,10 +15,12 @@ class Edition {
     functMove = null;
     shiftBoolean = false;
     dragAndDrop = null;
+    earcut = null;
 
-    constructor(engine, ui) {
+    constructor(engine, ui, earcut) {
         this.engine = engine;
         this.ui = ui;
+        this.earcut = earcut;
         this.vortex = new Vortex(engine);
         this.dragAndDrop = new DragDrop(engine);
     }
@@ -362,7 +364,7 @@ class Edition {
                 area.polygon = BABYLON.MeshBuilder.ExtrudePolygon("polygon", {
                     shape: area.path,
                     depth: 5
-                }, this.engine.scene);
+                }, this.engine.scene,this.earcut);
                 area.polygon.position.y = 5.2
                 area.polygon.material = new BABYLON.StandardMaterial("red", this.engine.scene);
                 area.polygon.material.alpha = 0.6;
@@ -418,5 +420,3 @@ class Edition {
 
 
 }
-
-export {Edition};
