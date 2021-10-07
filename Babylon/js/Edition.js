@@ -1,289 +1,52 @@
-import Vortex from "./Vortex.js";
-import DragDrop from "./DragDrop.js";
+import Vortex from "./Vortex.js"
+import DragDrop from "./DragDrop.js"
+import areas from "./areaPosition"
+import areaPosition from "./areaPosition"; //Doit devenir un objet
 
 export default class Edition {
 
     /**
-     * Variable needed for Edition, we need to defined the engine and ui. If you create a engine a edition was define by default
-     * @type {null}
+     * All variables need for Edition Mod
+     * Engine was the central, you can call all mod or subclass or get general variable
      */
-    ui = null;
-    engine = null;
-    vortex = null;
-    interfaces = [];
-    functDown = null;
-    functMove = null;
-    shiftBoolean = false;
-    dragAndDrop = null;
-    earcut = null;
+    engine = null
+    areas = new areaPosition();
+    vortex = null
+    functDown = null
+    functMove = null
+    shiftBoolean = false
+    dragAndDrop = null
+    earcut = null
+    editionMod = ""
 
-    constructor(engine, ui, earcut) {
-        this.engine = engine;
-        this.ui = ui;
-        this.earcut = earcut;
-        this.vortex = new Vortex(engine);
-        this.dragAndDrop = new DragDrop(engine);
-    }
-
-    line2D(name, options, scene) {
-        //Arrays for vertex positions and indices
-        let positions = [];
-        let indices = [];
-
-        let width = options.width || 1;
-        let path = options.path;
-        let closed = options.closed || false;
-        let standardUV;
-        if (options.standardUV === undefined) {
-            standardUV = true;
-        } else {
-            standardUV = options.standardUV;
-        }
-
-        let outerData = [];
-        let innerData = [];
-        let angle = 0;
-        let p
-        let nbPoints = path.length;
-        let line = BABYLON.Vector3.Zero();
-        let nextLine = BABYLON.Vector3.Zero();
-        let direction
-        let lineNormal
-        path[1].subtractToRef(path[0], line);
-
-        if (nbPoints > 2 && closed) {
-            path[2].subtractToRef(path[1], nextLine);
-            for (p = 0; p < nbPoints; p++) {
-                angle = Math.PI - Math.acos(BABYLON.Vector3.Dot(line, nextLine) / (line.length() * nextLine.length()));
-                direction = BABYLON.Vector3.Cross(line, nextLine).normalize().y;
-                lineNormal = new BABYLON.Vector3(-line.z, 0, 1 * line.x).normalize();
-                line.normalize();
-                innerData[(p + 1) % nbPoints] = path[(p + 1) % nbPoints];
-                outerData[(p + 1) % nbPoints] = path[(p + 1) % nbPoints].add(lineNormal.scale(width)).add(line.scale(direction * width / Math.tan(angle / 2)));
-                line = nextLine.clone();
-                path[(p + 3) % nbPoints].subtractToRef(path[(p + 2) % nbPoints], nextLine);
-            }
-        } else {
-            lineNormal = new BABYLON.Vector3(-line.z, 0, 1 * line.x).normalize();
-            line.normalize();
-            innerData[0] = path[0];
-            outerData[0] = path[0].add(lineNormal.scale(width));
-
-            for (p = 0; p < nbPoints - 2; p++) {
-                path[p + 2].subtractToRef(path[p + 1], nextLine);
-                angle = Math.PI - Math.acos(BABYLON.Vector3.Dot(line, nextLine) / (line.length() * nextLine.length()));
-                direction = BABYLON.Vector3.Cross(line, nextLine).normalize().y;
-                lineNormal = new BABYLON.Vector3(-line.z, 0, 1 * line.x).normalize();
-                line.normalize();
-                innerData[p + 1] = path[p + 1];
-                outerData[p + 1] = path[p + 1].add(lineNormal.scale(width)).add(line.scale(direction * width / Math.tan(angle / 2)));
-                line = nextLine.clone();
-            }
-            if (nbPoints > 2) {
-                path[nbPoints - 1].subtractToRef(path[nbPoints - 2], line);
-                lineNormal = new BABYLON.Vector3(-line.z, 0, 1 * line.x).normalize();
-                line.normalize();
-                innerData[nbPoints - 1] = path[nbPoints - 1];
-                outerData[nbPoints - 1] = path[nbPoints - 1].add(lineNormal.scale(width));
-            } else {
-                innerData[1] = path[1]
-                outerData[1] = path[1].add(lineNormal.scale(width));
-            }
-        }
-
-        let maxX = Number.MIN_VALUE;
-        let minX = Number.MAX_VALUE;
-        let maxZ = Number.MIN_VALUE;
-        let minZ = Number.MAX_VALUE;
-
-        for (p = 0; p < nbPoints; p++) {
-            positions.push(innerData[p].x, innerData[p].y, innerData[p].z);
-            maxX = Math.max(innerData[p].x, maxX);
-            minX = Math.min(innerData[p].x, minX);
-            maxZ = Math.max(innerData[p].z, maxZ);
-            minZ = Math.min(innerData[p].z, minZ);
-        }
-
-        for (p = 0; p < nbPoints; p++) {
-            positions.push(outerData[p].x, outerData[p].y, outerData[p].z);
-            maxX = Math.max(innerData[p].x, maxX);
-            minX = Math.min(innerData[p].x, minX);
-            maxZ = Math.max(innerData[p].z, maxZ);
-            minZ = Math.min(innerData[p].z, minZ);
-        }
-        let i
-        for (i = 0; i < nbPoints - 1; i++) {
-            indices.push(i, i + 1, nbPoints + i + 1);
-            indices.push(i, nbPoints + i + 1, nbPoints + i)
-        }
-
-        if (nbPoints > 2 && closed) {
-            indices.push(nbPoints - 1, 0, nbPoints);
-            indices.push(nbPoints - 1, nbPoints, 2 * nbPoints - 1)
-        }
-
-        let normals = [];
-        let uvs = [];
-
-        if (standardUV) {
-            for (p = 0; p < positions.length; p += 3) {
-                uvs.push((positions[p] - minX) / (maxX - minX), (positions[p + 2] - minZ) / (maxZ - minZ));
-            }
-        } else {
-            let flip = 0;
-            let p1;
-            let p2;
-            let p3;
-            let v0 = innerData[0];
-            let v1 = innerData[1].subtract(v0);
-            let v2 = outerData[0].subtract(v0);
-            let v3 = outerData[1].subtract(v0);
-            let axis = v1.clone();
-            axis.normalize();
-
-            p1 = BABYLON.Vector3.Dot(axis, v1);
-            p2 = BABYLON.Vector3.Dot(axis, v2);
-            p3 = BABYLON.Vector3.Dot(axis, v3);
-            minX = Math.min(0, p1, p2, p3);
-            maxX = Math.max(0, p1, p2, p3);
-
-            uvs[2 * indices[0]] = -minX / (maxX - minX);
-            uvs[2 * indices[0] + 1] = 1;
-            uvs[2 * indices[5]] = (p2 - minX) / (maxX - minX);
-            uvs[2 * indices[5] + 1] = 0;
-
-            uvs[2 * indices[1]] = (p1 - minX) / (maxX - minX);
-            uvs[2 * indices[1] + 1] = 1;
-            uvs[2 * indices[4]] = (p3 - minX) / (maxX - minX);
-            uvs[2 * indices[4] + 1] = 0;
-
-            for (i = 6; i < indices.length; i += 6) {
-
-                flip = (flip + 1) % 2;
-                v0 = innerData[0];
-                v1 = innerData[1].subtract(v0);
-                v2 = outerData[0].subtract(v0);
-                v3 = outerData[1].subtract(v0);
-                axis = v1.clone();
-                axis.normalize();
-
-                p1 = BABYLON.Vector3.Dot(axis, v1);
-                p2 = BABYLON.Vector3.Dot(axis, v2);
-                p3 = BABYLON.Vector3.Dot(axis, v3);
-                minX = Math.min(0, p1, p2, p3);
-                maxX = Math.max(0, p1, p2, p3);
-
-                uvs[2 * indices[i + 1]] = flip + Math.cos(flip * Math.PI) * (p1 - minX) / (maxX - minX);
-                uvs[2 * indices[i + 1] + 1] = 1;
-                uvs[2 * indices[i + 4]] = flip + Math.cos(flip * Math.PI) * (p3 - minX) / (maxX - minX);
-                uvs[2 * indices[i + 4] + 1] = 0;
-            }
-        }
-
-        BABYLON.VertexData.ComputeNormals(positions, indices, normals);
-        BABYLON.VertexData._ComputeSides(BABYLON.Mesh.DOUBLESIDE, positions, indices, normals, uvs);
-        //Create a custom mesh
-        let customMesh = new BABYLON.Mesh("custom", scene);
-
-        //Create a vertexData object
-        let vertexData = new BABYLON.VertexData();
-
-        //Assign positions and indices to vertexData
-        vertexData.positions = positions;
-        vertexData.indices = indices;
-        vertexData.normals = normals;
-        vertexData.uvs = uvs;
-
-        //Apply vertexData to custom mesh
-        vertexData.applyToMesh(customMesh);
-
-        return customMesh;
-
+    /**
+     * Create a Edition Mod with the central and personal earcut use on extrudePolygon
+     * @param engine
+     * @param earcut
+     */
+    constructor(engine, earcut) {
+        this.engine = engine
+        this.earcut = earcut
+        this.vortex = new Vortex(engine)
+        this.dragAndDrop = new DragDrop(engine)
     }
 
     /**
-     * editMod allow to add, supress, modify vertex of area in 3D environement with mouse button (left, middle, right) and to drag&Drop
+     * editMod allow to set function need to, add, remove, modify vortex. Two type of function, onPointerMove and
+     * onPointerDown. And they Detect when mouse enter on visualisation to detect key press, like shift left.
      */
-    editMod(button) {
-        let littleEngine = this.engine;
-        let drag = this.dragAndDrop;
-        let interfaces = this.interfaces;
-        let me = this;
-        button.onPointerUpObservable.clear();
-        button.onPointerUpObservable.add(function () {
-            interfaces.forEach(e => e.isVisible = false);
-            me.functDown = null;
-            me.functMove = null;
-            littleEngine.setCameraNormal();
-            button.onPointerUpObservable.clear();
-            button.onPointerUpObservable.add(function () {
-                littleEngine.edition.editMod(button);
-            })
-        })
-
-        littleEngine.setCameraEdition();
-        //Specification necessary for 2D visualisation on 3D environement
-        littleEngine.resizeCamera2D();
-        if (interfaces.length <= 0) {
-            //Allow to specify in textInput the currently name of area you want to modify
-            let textInputArea = this.ui.setButtonWithInterface(button, "areaNumber", "1", 0, 10, function () {
-                me.ui.setArreaButton(textInputArea)
-            });
-            interfaces.push(textInputArea);
-            //Set areaName in global variable
-            littleEngine.setAreaName(textInputArea.textBlock.text);
-            //List of boutons
-            let buttonAdd = this.ui.setButtonWithInterface(textInputArea, "button_add", "add", 0, 10, function () {
-                me.selectAction("add")
-            });
-            interfaces.push(buttonAdd);
-            let buttonRemove = this.ui.setButtonWithInterface(buttonAdd, "button_remove", "remove", 0, 10, function () {
-                me.selectAction("remove");
-            });
-            interfaces.push(buttonRemove);
-            let buttonModify = this.ui.setButtonWithInterface(buttonRemove, "button_modify", "modify", 0, 10, function () {
-                me.selectAction("modify");
-            });
-            interfaces.push(buttonModify);
-            //Picker Color to change color of area
-            let pickerRGB = this.ui.setPickerWithInterface(buttonModify, 0, 10, function (value) { // value is a color3
-                let area = littleEngine.mapArea.get(littleEngine.getAreaName());
-                if (area !== undefined) {
-                    area.color = new BABYLON.Color3(value.r, value.g, value.b);
-                    me.refreshArea(area);
-                    littleEngine.mapArea.set(littleEngine.getAreaName(), area);
-                }
-            });
-            interfaces.push(pickerRGB);
-            //Bountons to take on Drag & Drop
-            let buttonDragDrop = this.ui.setButtonWithInterface(pickerRGB, "button_drag&Drop", "drag&Drop", 0, 10, function () {
-                me.selectAction("drag&Drop")
-            });
-            buttonDragDrop.height = buttonModify.height;
-            buttonDragDrop.width = buttonModify.width;
-            interfaces.push(buttonDragDrop);
-            //Area Text to choose name of access
-            let textInputAccess = this.ui.setTextAreaWithInterface(buttonDragDrop, "accesArea", "access1", 0, 10);
-            textInputAccess.onTextChangedObservable.add(function (event) {
-                littleEngine.setAccessName(textInputAccess.text);
-            });
-            //Set areaName in global variable
-            littleEngine.setAccessName(textInputAccess.text);
-            interfaces.push(textInputAccess);
-        } else {
-            interfaces.forEach(e => {
-                e.isVisible = true;
-                if (e.name == "areaNumber") {
-                    this.ui.setArreaButton(e);
-                }
-            });
-        }
+    editMod() {
+        let littleEngine = this.engine
+        let drag = this.dragAndDrop
+        let me = this
+        littleEngine.actualClass = this
+        this.editionMod = ""
 
         //Allow to launch a function if pointer has click
         littleEngine.scene.onPointerDown = function (event, pickResult) {
-            littleEngine.setVector(pickResult.pickedPoint);
-            if (me.functDown != null) {
-                me.functDown();
+            littleEngine.setVector(pickResult.pickedPoint)
+            if (me !== undefined && me !== null && me.functDown !== undefined && me.functDown !== null) {
+                me.functDown()
             }
         }
 
@@ -291,89 +54,149 @@ export default class Edition {
         littleEngine.scene.onPointerMove = function (event, pickResult) {
             if (me.functMove != null) {
                 if (!me.shiftBoolean) {
-                    littleEngine.setVector(littleEngine.scene.pick(littleEngine.scene.pointerX, littleEngine.scene.pointerY).pickedPoint);
+                    littleEngine.setVector(littleEngine.scene.pick(littleEngine.scene.pointerX, littleEngine.scene.pointerY).pickedPoint)
                 }
-                me.functMove();
+                me.functMove()
             }
         }
-        //Add a observable to detect the key press, actualy we need to detect shift press
-        littleEngine.scene.onKeyboardObservable.add((kbInfo) => {
-            switch (kbInfo.type) {
-                case BABYLON.KeyboardEventTypes.KEYDOWN:
-                    if (kbInfo.event.key === "Shift") {
+
+        document.getElementById("renderCanvas").addEventListener("mouseenter", function () {
+            document.onkeydown = function (key) {
+                switch (key.code) {
+                    case "ShiftLeft":
                         if (littleEngine.clone != null) {
                             if (!me.shiftBoolean) {
-                                littleEngine.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA
-                                littleEngine.camera.attachControl(littleEngine.canvas, true);
-                                littleEngine.camera.position = new BABYLON.Vector3(littleEngine.clone.position.x, littleEngine.clone.position.y, littleEngine.clone.position.z);
-                                littleEngine.zoom = 40;
-                                littleEngine.resizeCamera2D();
-                                littleEngine.clone.position = littleEngine.vector;
-                                drag.followObject();
-                                littleEngine.camera.position.x -= 10;
-                                littleEngine.camera.position.z -= 10
+                                littleEngine.setCameraType("dragDropShift")
+                                drag.followObject()
                             }
-                            me.shiftBoolean = true;
+                            me.shiftBoolean = true
                         }
-                    }
-                    break;
-                case BABYLON.KeyboardEventTypes.KEYUP:
-                    if (kbInfo.event.key === "Shift") {
-                        me.shiftBoolean = false;
-                        littleEngine.oldPointer = null;
-                        littleEngine.setCameraEdition();
-                        littleEngine.resizeCamera2D();
-                    }
-                    break;
+                        break
+                    default :
+                        break
+                }
             }
-        });
+            document.onkeyup = function (key) {
+                switch (key.code) {
+                    case "ShiftLeft":
+                        me.shiftBoolean = false
+                        littleEngine.oldPointer = null
+                        littleEngine.setCameraType("edition")
+                        break
+                    default :
+                        break
+                }
+            }
+
+        })
+        document.getElementById("renderCanvas").addEventListener("mouseleave", function () {
+            document.onkeyup = null
+            document.onkeydown = null
+        })
     }
 
+    /**
+     * Allow to set color of actual Area, use when you select color on color picker.
+     * @param e => element of color defined in colorPicker
+     */
+    setColor(e) {
+        let color = e.rgba
+        color = new BABYLON.Color3(color.r / 255, color.g / 255, color.b / 255)
+        if (this.editionMod === "area") {
+            let areaName = this.engine.getAreaName()
+            if (areaName !== "") {
+                let area = this.engine.getMapArea().get(areaName)
+                if (area !== undefined && area != null) {
+                    area.Color = color
+                    this.refreshArea(area)
+                    this.engine.getMapArea().set(areaName, area)
+                }
+            }
+
+        } else if (this.editionMod === "access") {
+            if (this.engine.clone !== undefined && this.engine.clone !== null) {
+                this.engine.clone.material.diffuseColor = color
+            } else {
+                let name = this.engine.getAccessName()
+                let node = this.engine.scene.getNodeByName(name)
+                node.material.diffuseColor = color
+            }
+        }
+    }
 
     /**
+     * When you change your mod, it necessary to take of all your function dynamic.
+     * In edition we need to take off the function Down and the function Move.
+     */
+    stopAction() {
+        //Allow to launch a function if pointer has click
+        this.engine.scene.onPointerDown = null
+        this.functDown = null
+        //Allow to launch a function if pointer move.
+        this.engine.scene.onPointerMove = null
+        this.functMove = null
+        //Destroy Clone, if it necessary
+        if(this.engine.clone !== undefined && this.engine.clone !== null){
+            this.engine.clone.dispose()
+            this.engine.clone = null
+        }
+    }
 
+    /**
      <summary> : Allow to refresh the renderer of one area
      <param> : area is what you want to modify in visualisation
      <returns> area was modify at the end of code, so you need to modify him in the map.
      <example> :
-
      {
      {some modify in area}
      refreshArea(area)
-     mapArea.set(areaName,area);
+     mapArea.set(areaName,area)
      }
      */
     refreshArea(area) {
-        if (area.line != undefined) {
-            area.line.dispose();
-        }
-        if (area.path.length >= 2) {
-            //LIGNE
-            if (false) {
-                area.line = this.line2D("line", {path: area.path, width: 1, closed: true}, this.engine.scene);
-                area.line.material = new BABYLON.StandardMaterial("", this.engine.scene);
-                area.line.material.alpha = 0.8;
-                area.line.material.diffuseColor = BABYLON.Color3.Black();
-            }
+        if (area.Positions.length >= 2) {
 
-            if (area.polygon != undefined) {
-                area.polygon.dispose();
+            if (area.polygon !== undefined && area.polygon !== null) {
+                area.polygon.dispose()
             }
-
-            if (area.path.length >= 3) {
+            if (area.Positions.length >= 3) {
                 area.polygon = BABYLON.MeshBuilder.ExtrudePolygon("polygon", {
-                    shape: area.path,
+                    shape: area.Positions,
                     depth: 5
-                }, this.engine.scene,this.earcut);
+                }, this.engine.scene, this.earcut)
+
                 area.polygon.position.y = 5.2
-                area.polygon.material = new BABYLON.StandardMaterial("red", this.engine.scene);
-                area.polygon.material.alpha = 0.6;
-                area.polygon.material.diffuseColor = area.color;
-                area.polygon.material.backFaceCulling = false;
-
-
+                area.polygon.material = new BABYLON.StandardMaterial("red", this.engine.scene)
+                area.polygon.material.alpha = 0.6
+                if (area.Color === undefined || area.Color === null) {
+                    area.Color = new BABYLON.Color3(Math.random(), Math.random(), Math.random())
+                }
+                area.polygon.material.diffuseColor = area.Color
+                area.polygon.material.backFaceCulling = false
             }
         }
+        let saveArea = {
+            ID: area.ID,
+            EstablishmentID: area.EstablishmentID,
+            AreaID: area.AreaID,
+            Name: area.Label,
+            EstablishmentName: area.EstablishmentName,
+            AreaName: area.AreaName,
+            Label: area.Label,
+            Positions: [],
+            Color: area.Color
+        }
+        saveArea.Positions = []
+        let position = null
+        if (area.Positions.length === 0) {
+            console.log("need suppress to data base")
+        }
+        area.Positions.forEach(e => {
+            position = {X: e.x, Y: e.y, Z: e.z}
+            saveArea.Positions.push(position)
+        })
+        delete saveArea.polygon
+        this.areas.updateAreaPosition(saveArea)
     }
 
     /**
@@ -381,40 +204,47 @@ export default class Edition {
      * @param action
      */
     selectAction(action) {
-        let me = this;
-        if (this.ui != null) {
-            this.ui.cleanUi();
-        }
+        let me = this
+        let mod = 0
         switch (action) {
-            case "add" :
-                me.functDown = me.vortex.addVertex;
-                break;
-            case "remove" :
-                me.functDown = me.vortex.removeVertex;
-                break;
-            case "modify" :
-                me.functDown = me.vortex.modifyVertex;
-                break;
+            case "addVertex" :
+                this.editionMod = "area"
+                me.functDown = me.vortex.addVertex
+                mod = 1
+                break
+            case "removeVertex" :
+                this.editionMod = "area"
+                me.functDown = me.vortex.removeVertex
+                mod = 1
+                break
+            case "modifyVertex" :
+                this.editionMod = "area"
+                me.functDown = me.vortex.modifyVertex
+                mod = 1
+                break
             case "modify_move" :
                 this.functDown = function () {
-                    me.functDown = me.vortex.modifyVertex;
-                    me.functMove = null;
-                };
-                me.functMove = me.vortex.followVertex;
-                break;
-            case "drag&Drop" :
-                me.dragAndDrop.dragAndDropScene(me.engine.getAccessName());
-                break;
+                    me.functDown = me.vortex.modifyVertex
+                    me.functMove = null
+                }
+                me.functMove = me.vortex.followVertex
+                break
+            case "dragDrop" :
+                this.editionMod = "access"
+                me.dragAndDrop.dragAndDropScene(me.engine.getAccessName())
+                mod = 2
+                break
             case "followObject" :
-                me.functMove = me.dragAndDrop.followObject;
+                me.functMove = me.dragAndDrop.followObject
                 me.functDown = function () {
-                    me.functMove = null;
-                    me.functDown = null;
-                    me.engine.clone = null;
-                };
+                    me.functMove = null
+                    me.functDown = null
+                    me.engine.clone = null
+                }
+                break
             default :
-                console.log("Action defines : Incorrect ");
-                break;
+                console.log("Action defines : Incorrect " + action)
+                break
         }
     }
 

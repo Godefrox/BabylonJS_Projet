@@ -2,24 +2,31 @@
  @Author : Godefroy MONTONATI
  @Module : Visualisation 3D
  */
-import Interface from "./Interface.js";
+
 import Edition from "./Edition.js";
+import Simulation from "./Simulation.js";
 
 export default class Engine {
+    /**
+     * Engine represent the brain of project. They store the global variables and allow the clients to take it.
+     * It allow the client to get other client and use they method. Also, all clients need to know the brain/server.
+     */
 
     /**
-     Ensemble de variables spécifiques à Babylon JS
+     All variables create specific to Babylon JS
      */
     canvas = document.getElementById("renderCanvas");
     engine = null;
     scene = null;
     sceneToRender = null;
     camera = null;
+
     /**
-     Ensemble de variables global
+     All variables need on the project in global.
      */
-    ui = null;
+    core = null;
     edition = null;
+    simulation = null;
     vector = null;
     oldPointer = null;
     areaName = null;
@@ -31,22 +38,16 @@ export default class Engine {
     width = null;
     ratio = null;
     mapArea = new Map();
-    /**
-     * Structure d'une données au sein de la map
-     * {
-     * path : path,
-     * line : line,
-     * polygon: polygon,
-     * color : color}
-     */
     AccessControl = [];
-    boundingBox = null;
-    center = null;
-    extendSize = null;
-    shiftBoolean = false;
     earcut = null;
+    actualClass = null;
+    cameraType = "normal";
+    cameraOldType = "normal";
+    center = null
 
-    constructor(earcut) {
+
+    constructor(core, earcut) {
+        this.core = core
         this.earcut = earcut;
     }
 
@@ -80,9 +81,9 @@ export default class Engine {
      */
     setAreaName(newAreaName) {
         if (typeof newAreaName === 'string') {
+            this.edition.editionMod = "area"
             this.areaName = newAreaName;
-        } else {
-            console.log("AreaName : Type incorrect");
+            document.getElementById("textAreaInput").label = newAreaName;
         }
     }
 
@@ -92,26 +93,96 @@ export default class Engine {
      */
     setAccessName(newAccessName) {
         if (typeof newAccessName === 'string') {
+            this.edition.editionMod = "access"
             this.accessName = newAccessName;
-        } else {
-            console.log("AccessName : Type incorrect");
+            document.getElementById("textAccessInput").value = newAccessName;
         }
     }
 
-    getAccessControl(){
+    /**
+     * set the type of camera
+     * List of type :
+     * edition - All edition Mode
+     * normal - Allow to move on the scene
+     * dragDropShift - Set the height of clone, need to defined the clone before
+     * simulation - Pass on simulation mod and see your data in real time
+     * @param cameraType string only
+     */
+    setCameraType(cameraType) {
+        if (typeof cameraType === "string") {
+            this.cameraOldType = this.cameraType.slice()
+            this.cameraType = cameraType
+            this.setCameraMod()
+        }
+    }
+
+    /**
+     * Allow to get list of Access
+     * @returns {*[]}
+     */
+    getAccessControl() {
         return this.AccessControl;
     }
 
     /**
      * resizeCamera to have the best point of view on mod you want
      */
-    resizeCamera2D() {
-        this.ratio = this.canvas.width / this.canvas.height;
-        this.width = this.zoom * this.ratio;
-        this.camera.orthoTop = this.zoom;
-        this.camera.orthoLeft = -this.width;
-        this.camera.orthoRight = this.width;
-        this.camera.orthoBottom = -this.zoom;
+    resizeCamera() {
+        if (this.camera !== undefined && this.camera !== null) {
+            this.ratio = this.canvas.width / this.canvas.height;
+            this.width = this.zoom * this.ratio;
+            this.camera.orthoTop = this.zoom;
+            this.camera.orthoLeft = -this.width;
+            this.camera.orthoRight = this.width;
+            this.camera.orthoBottom = -this.zoom;
+        }
+    }
+
+    /**
+     * Allow to modify the actual Camera on mod choosed. To change the mod of camera, we need to call setCameraType(/!\ only string)
+     */
+    setCameraMod() {
+        if (this.camera !== undefined && this.camera !== null) {
+
+            switch (this.cameraType) {
+                case "edition" :
+                    this.stopAction()
+                    this.actualClass = this.edition;
+                    this.setCameraEdition();
+                    break;
+                case "normal" :
+                    this.stopAction()
+                    this.actualClass = null;
+                    this.setCameraNormal();
+                    break;
+                case "dragDropShift" :
+                    this.actualClass = this.edition;
+                    this.setCameraDragDrop();
+                    break;
+                case "simulation" :
+                    this.stopAction()
+                    this.actualClass = this.simulation;
+                    this.setCameraSimulation();
+                    break;
+                default :
+                    this.stopAction()
+                    this.actualClass = null;
+                    console.log("type of camera not initialize : " + this.cameraType)
+                    break;
+            }
+            this.resizeCamera();
+        }
+    }
+
+    /**
+     * Stop all action of actualClass, by-pass problem
+     */
+    stopAction() {
+        if (this.actualClass !== undefined && this.actualClass !== null) {
+            if (this.actualClass.stopAction !== undefined && this.actualClass.stopAction !== null) {
+                this.actualClass.stopAction();
+            }
+        }
     }
 
     /**
@@ -120,7 +191,21 @@ export default class Engine {
      * And if you want to resize camera Launch resizeCamera2D
      */
     setCameraEdition() {
-        this.camera.detachControl();
+        let bool = true;
+        this.edition.editMod();
+        if (this.camera !== undefined && this.camera !== null) {
+            if (this.cameraOldType === "simulation") {
+                this.camera.dispose();
+            } else {
+                bool = false;
+                this.camera.detachControl();
+            }
+        }
+
+        if (bool) {
+            this.camera = new BABYLON.FreeCamera("cameraNormal", new BABYLON.Vector3(76, 120, 9), this.scene);
+            this.camera.setTarget(BABYLON.Vector3.Zero());
+        }
         //Camera on 2D projection in 3D environement
         this.camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //Set position of camera
@@ -137,8 +222,78 @@ export default class Engine {
      * And if you want to resize camera Launch resizeCamera2D
      */
     setCameraNormal() {
+        let bool = true;
+        if (this.camera !== undefined && this.camera !== null) {
+            if (this.cameraOldType === "simulation") {
+                this.camera.dispose();
+
+            } else {
+                bool = false;
+            }
+        }
+        if (bool) {
+            this.camera = new BABYLON.FreeCamera("cameraNormal", new BABYLON.Vector3(76, 120, 9), this.scene);
+            this.camera.setTarget(BABYLON.Vector3.Zero());
+        }
         this.camera.attachControl(this.canvas, true);
         this.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA;
+    }
+
+    /**
+     * Set the camera on Drag and Drop, the function verify if camera exits and was not cameraSimulation
+     */
+    setCameraDragDrop() {
+        let bool = true;
+        if (this.camera !== undefined && this.camera !== null) {
+            if (this.cameraOldType === 'simulation') {
+                this.camera.dispose();
+            } else {
+                bool = false;
+            }
+        }
+        if (bool) {
+            this.camera = new BABYLON.FreeCamera("cameraNormal", new BABYLON.Vector3(76, 120, 9), this.scene);
+            this.camera.setTarget(BABYLON.Vector3.Zero());
+        }
+
+        this.camera.mode = BABYLON.Camera.PERSPECTIVE_CAMERA
+        this.camera.attachControl(this.canvas, true);
+        this.camera.position = new BABYLON.Vector3(this.clone.position.x, this.clone.position.y, this.clone.position.z);
+        this.zoom = 40;
+        this.clone.position = this.vector;
+        this.camera.position.x -= 10;
+        this.camera.position.z -= 10
+    }
+
+    /**
+     * Set the camera on Simulation mod, the function verify if camera exits and was not cameraSimulation
+     */
+    setCameraSimulation() {
+        let bool = true;
+        if (this.camera !== undefined && this.camera !== null) {
+            if (this.cameraOldType !== 'cameraSimulation') {
+                this.camera.dispose();
+            } else {
+                bool = false;
+            }
+        }
+        let miniSecond = 10000;
+        const degree = 360;
+
+        if (bool) {
+            let me = this;
+            me.camera = new BABYLON.ArcRotateCamera("cameraSimulation", 0, 0.56, 120, new BABYLON.Vector3(76, 0, 9), this.scene);
+            let func = function () {
+                setTimeout(function () {
+                    me.camera.alpha += (1 / 180);
+
+                    if (me.cameraType === "simulation") {
+                        func();
+                    }
+                }, miniSecond / degree)
+            }
+            func();
+        }
     }
 
     /**
@@ -158,6 +313,66 @@ export default class Engine {
     }
 
     /**
+     * Allow to set the color of actual object on the actual Class. If you have more than edition in future, you need to
+     * use setColor to by pass some problem. Example of Adapter pattern without interface
+     * @param e
+     */
+    setColor(e) {
+        if (this.actualClass !== null && this.actualClass !== undefined) {
+            if (this.actualClass.setColor !== undefined && this.actualClass.setColor !== null) {
+                this.actualClass.setColor(e);
+            }
+        }
+    }
+
+    /**
+     * Allow to set the actual Action in Edition. Change to add, modify or remove vortex. And also you can drag and drop
+     * Models or adjust the height
+     * @param action
+     */
+    setAction(action) {
+        if (this.edition !== undefined && this.edition !== null) {
+            this.edition.selectAction(action);
+        }
+    }
+
+    /**
+     * Launch the simulation, with core object => JS object of Vue page
+     * @param core
+     * @param mapData
+     * @param dates
+     * @param tabDate
+     */
+    launchSimulation(core, mapData, dates, tabDate) {
+        if (this.simulation !== undefined && this.simulation !== null) {
+            this.simulation.launchSimulation(core, mapData, dates, tabDate)
+        } else {
+            console.log("Simulation was not defined")
+        }
+    }
+
+    /**
+     * Allow to set à specific time in the timeLine
+     * @param tabDate
+     * @param startDate
+     * @param lastDate
+     * @param mapData
+     */
+    simulationSet(tabDate, startDate, lastDate, mapData, index) {
+        if (this.simulation != undefined && this.simulation != null) {
+            this.simulation.simulationSet(tabDate, startDate, lastDate, mapData, index)
+        }
+    }
+
+    /**
+     * Change the clone you want to modify in edition mod
+     * @param clone
+     */
+    setClone(clone) {
+        this.clone = clone
+    }
+
+    /**
      * @param name represent the name of scene you want to load in scene folder, exemple : name = "prototype" for "prototype.babylon"
      * @returns {BABYLON.Scene}
      */
@@ -168,32 +383,36 @@ export default class Engine {
             if (materials !== undefined) {
                 materials.forEach(material => {
                     material.backFaceCulling = false;
+                    material.freeze();
                 });
             }
         });
         // Camera
-        this.camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(76, 120, 9), this.scene);
+        this.camera = new BABYLON.FreeCamera("cameraNormal", new BABYLON.Vector3(76, 120, 9), this.scene);
 
         this.camera.setTarget(BABYLON.Vector3.Zero());
         // This attaches the camera to the canvas
         this.camera.attachControl(this.canvas, true);
-        let light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(5, 10, 0), this.scene);
+        const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(5, 10, 0), this.scene);
 
-        // GUI
-        this.ui = new Interface(this);
-        this.edition = new Edition(this, this.ui,this.earcut);
-        let edit = this.edition;
-        let button = this.ui.setButton("button_area_editor", "area editor", BABYLON.GUI.Control.VERTICALALIGNMENT_TOP, BABYLON.GUI.Control.HORIZONTAlALIGNMENT_LEFT, 10, 10, 20, "white", "green", function () {
-            edit.editMod(button);
-        });
+        // EDITION
+        this.edition = new Edition(this, this.earcut);
+        // SIMULATION
+        this.simulation = new Simulation(this);
+        // EXEMPLE OF ACCESS
         this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access1", this.scene));
         this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access2", this.scene));
         this.AccessControl.push(BABYLON.MeshBuilder.CreateBox("access3", this.scene));
         this.AccessControl.forEach(e => {
             e.isVisible = false;
             e.material = new BABYLON.StandardMaterial((e.name + "_material"), this.scene);
-            e.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random, Math.random);
+            e.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
         })
+        let options = new BABYLON.SceneOptimizerOptions();
+        options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+
+        // Optimizer
+        let optimizer = new BABYLON.SceneOptimizer(this.scene, options);
         return this.scene;
     }
 
@@ -202,7 +421,7 @@ export default class Engine {
      * @returns {BABYLON.Scene}
      */
     defaultScene = function () {
-        return this.createScene("prototype.babylon")
+        return this.createScene("scene/prototype.babylon")
     }
 
 

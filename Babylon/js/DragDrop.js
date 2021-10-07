@@ -17,8 +17,8 @@ export default class DragDrop {
             while (this.engine.scene.getNodeByName((nameClone + i) !== undefined)) {
                 i++;
             }
-            let node2 = new BABYLON.Node(nameClone, this.scene);
-            this.engine.clone = node.clone(nameClone + "_clone", node2);
+            let node2 = new BABYLON.Node(nameClone, this.engine.scene);
+            this.engine.setClone(node.clone(nameClone + "_clone", node2));
             this.engine.clone.isVisible = true;
             this.engine.boundingBox = this.engine.clone.getBoundingInfo().boundingBox;
             this.engine.center = this.engine.boundingBox.center;
@@ -54,17 +54,5 @@ export default class DragDrop {
         this.engine.clone.position = this.engine.vector;
     }
 
-    /**
-     * Allow to change Y position of actual clone in the scene all depend of direction of mouse. GO TOP of SCREEN = UP
-     */
-    dragAndDropHeightPosition() {
-        if (this.engine.oldPointer != null && this.engine.clone != null && this.engine.vector != null) {
-            if (this.engine.oldPointer.x < this.engine.vector.x) {
-                this.engine.clone.y += 0.1;
-            } else {
-                this.engine.clone.y -= 0.1;
-            }
-        }
-    }
 
 }

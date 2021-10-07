@@ -12,22 +12,24 @@ export default class Vortex {
      */
     addVertex() {
         this.engine.vector.y = Math.random() * 0.2;
-        let area = this.engine.mapArea.get(this.engine.areaName);
-        let path = null;
+        let area = this.engine.mapArea.get(this.engine.getAreaName());
+        if(area !== undefined && area !== null){
+        let Positions = null;
         let line = null;
         let polygon = null;
-        let color = null;
+        let Color = null;
         if (area == undefined) {
-            path = [
+            Positions = [
                 this.engine.vector
             ]
-            color = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-            area = {path: path, line: line, polygon: polygon, color: color}
+            Color = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+            area = {Positions: Positions, line: line, polygon: polygon, Color: Color}
         } else {
-            area.path.push(this.engine.vector);
+            area.Positions.push(this.engine.vector);
             this.engine.edition.refreshArea(area);
         }
         this.engine.mapArea.set(this.engine.areaName, area);
+        }
     }
 
     /**
@@ -37,15 +39,15 @@ export default class Vortex {
         this.engine.vector.y = 0.2;
         let area = this.engine.mapArea.get(this.engine.areaName);
         if (area !== undefined) {
-            let path = area.path;
-            if (path.length > 0) {
-                if (path.length > 2) {
-                    let i = this.engine.edition.vortex.closestVortex(path);
-                    path.splice(i, 1);
+            let Positions = area.Positions;
+            if (Positions.length > 0) {
+                if (Positions.length > 2) {
+                    let i = this.engine.edition.vortex.closestVortex(Positions);
+                    Positions.splice(i, 1);
                 } else {
-                    path = [];
+                    Positions = [];
                 }
-                area.path = path;
+                area.Positions = Positions;
                 this.engine.edition.refreshArea(area);
                 this.engine.mapArea.set(this.engine.areaName, area);
             }
@@ -58,9 +60,9 @@ export default class Vortex {
     modifyVertex() {
         let area = this.engine.mapArea.get(this.engine.areaName);
         if (area != undefined) {
-            let path = area.path;
-            if (path.length > 0) {
-                if (path.length > 1) {
+            let Positions = area.Positions;
+            if (Positions.length > 0) {
+                if (Positions.length > 1) {
                     this.engine.edition.selectAction("modify_move");
                 }
             }
@@ -73,11 +75,11 @@ export default class Vortex {
     followVertex() {
         let area = this.engine.mapArea.get(this.engine.areaName);
         if (area != undefined) {
-            let path = area.path;
-            let i = this.engine.edition.vortex.closestVortex(path);
+            let Positions = area.Positions;
+            let i = this.engine.edition.vortex.closestVortex(Positions);
             this.engine.vector.y = 0.2;
-            path.splice(i, 1, this.engine.vector);
-            area.path = path;
+            Positions.splice(i, 1, this.engine.vector);
+            area.Positions = Positions;
             this.engine.edition.refreshArea(area);
             this.engine.mapArea.set(this.engine.areaName, area);
         }
@@ -85,13 +87,13 @@ export default class Vortex {
 
     /**
      * detect the closest vortex with position of vector (Mouse position in 3D)
-     * @param path
+     * @param Positions
      * @returns {*}
      */
-    closestVortex(path) {
-        let similar = path[0];
+    closestVortex(Positions) {
+        let similar = Positions[0];
         let distance = Math.abs((this.engine.vector.x - similar.x)) + Math.abs((this.engine.vector.y - similar.y)) + Math.abs((this.engine.vector.z - similar.z));
-        path.forEach(e => {
+        Positions.forEach(e => {
             let distanceB = Math.abs((this.engine.vector.x - e.x)) + Math.abs((this.engine.vector.y - e.y)) + Math.abs((this.engine.vector.z - e.z));
 
             if (distance > distanceB) {
@@ -99,7 +101,7 @@ export default class Vortex {
                 similar = e;
             }
         });
-        return path.indexOf(similar);
+        return Positions.indexOf(similar);
     }
 }
 
