@@ -1,0 +1,10 @@
+{
+  "name": "BabylonJS_Projet",
+  "version": "1.0.0",
+  "dependencies": {
+    "moment": "^2.29.1"
+  },
+  "devDependencies": {
+    "apexcharts": "^3.28.3"
+  }
+}
